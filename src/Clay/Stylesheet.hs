@@ -98,11 +98,12 @@ data Rule
   = Property             [Modifier] (Key ())       Value
   | PropertyAxial        [Modifier] (PartedKey ()) (Axial Value)
   | PropertyDirectional  [Modifier] (PartedKey ()) (Directional Value)
-  | Nested   App         [Rule]
-  | Query    MediaQuery  [Rule]
-  | Face                 [Rule]
-  | Keyframe Keyframes
-  | Import   Text
+  | Nested         App        [Rule]
+  | Query          MediaQuery [Rule]
+  | Face                      [Rule]
+  | Keyframe       Keyframes
+  | Import         Text
+  | CustomSelector Text       Selector
   deriving Show
 
 newtype StyleM a = S (Writer [Rule] a)
@@ -224,6 +225,26 @@ fontFace rs = rule $ Face (runS rs)
 
 importUrl :: Text -> Css
 importUrl l = rule $ Import l
+
+-------------------------------------------------------------------------------
+
+-- | Define a new custom selector.
+-- Use 'customSel' to reference an already-defined selector.
+--
+-- > render $ do
+-- >   sel <- defineCustomSel "example" (header |> nav)
+-- >   body |> sel ** a ?
+-- >     do background white
+--
+-- > @custom-selector :--example header > nav;
+-- > body > :--example a {
+-- >   background: white;
+-- > }
+
+defineCustomSel :: Text -> Selector -> StyleM Refinement
+defineCustomSel n s = do
+  rule $ CustomSelector n s
+  pure $ customSel n
 
 -------------------------------------------------------------------------------
 

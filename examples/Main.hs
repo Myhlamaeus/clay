@@ -40,35 +40,39 @@ main = putCss logo
                             (m * fromIntegral x + fromIntegral y * (s + m))
                             (clr -. 50 +. fromIntegral (x * 50))
 
-    square = ".square" ?
-      do font ( Optional (Just bold) Nothing (Just italic)
-              , Required (px 50) (Just (px 60)) ["Helvetica"] [sansSerif]
-              )
-         color (setA 80 white)
-         sym2 padding (px 2) (px 22)
-         position absolute
-         boxSizing borderBox
+    squareSel = defineCustomSel "square" ".square"
 
-         hover &
-           do color white
-              "div" <? background (vGradient (setA 0 white) (setA 100 white))
+    square = do
+      sel <- squareSel
+      sel ?
+        do font ( Optional (Just bold) Nothing (Just italic)
+                , Required (px 50) (Just (px 60)) ["Helvetica"] [sansSerif]
+                )
+           color (setA 80 white)
+           sym2 padding (px 2) (px 22)
+           position absolute
+           boxSizing borderBox
 
-         before &
-           do toTheRight m
-              transforms [translate (px 0) (px $ fromIntegral $ div (floor m) 2), skew (deg 0) (deg 45)]
-              boxShadow $ fromList [black `bsColor` shadowWithBlur 0 0 (px 40)]
+           hover &
+             do color white
+                "div" <? background (vGradient (setA 0 white) (setA 100 white))
 
-         after &
-           do toTheBottom m
-              transforms [translate (px $ fromIntegral $ div (floor m) 2) (px 0), skew (deg 45) (deg 0)]
-              boxShadow $ fromList [black `bsColor` shadowWithBlur 0 0 (px 40)]
+           before &
+             do toTheRight m
+                transforms [translate (px 0) (px $ fromIntegral $ div (floor m) 2), skew (deg 0) (deg 45)]
+                boxShadow $ fromList [black `bsColor` shadowWithBlur 0 0 (px 40)]
 
-         "div" <?
-           do position absolute
-              background (vGradient (setA 0 white) (setA 60 white))
-              borderBottomLeftRadius  (pct 100) (pct 100)
-              borderBottomRightRadius (pct  40) (pct  15)
-              [left, top, right, bottom] `forM_` ($ pct 4)
+           after &
+             do toTheBottom m
+                transforms [translate (px $ fromIntegral $ div (floor m) 2) (px 0), skew (deg 45) (deg 0)]
+                boxShadow $ fromList [black `bsColor` shadowWithBlur 0 0 (px 40)]
+
+           "div" <?
+             do position absolute
+                background (vGradient (setA 0 white) (setA 60 white))
+                borderBottomLeftRadius  (pct 100) (pct 100)
+                borderBottomRightRadius (pct  40) (pct  15)
+                [left, top, right, bottom] `forM_` ($ pct 4)
 
     squareI i x y c = ".square" `with` nthChild i ?
       do rectangular x y s s
@@ -100,4 +104,3 @@ main = putCss logo
          right  (px 0)
          bottom (px (-h))
          height (px h)
-

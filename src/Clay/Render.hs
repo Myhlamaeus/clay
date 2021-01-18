@@ -237,6 +237,7 @@ rules cfg sel rs = mconcat
   ,             imp    cfg              `foldMap` mapMaybe imports rs
   ,             kframe cfg              `foldMap` mapMaybe kframes rs
   ,             face   cfg              `foldMap` mapMaybe faces   rs
+  ,             customSelector cfg     `foldMap` mapMaybe customSelectors rs
   , (\(a, b) -> rules  cfg (a : sel) b) `foldMap` mapMaybe nested  rs
   , (\(a, b) -> query  cfg  a   sel  b) `foldMap` mapMaybe queries rs
   ]
@@ -256,6 +257,8 @@ rules cfg sel rs = mconcat
         faces               _                           = Nothing
         imports             (Import i   )               = Just i
         imports             _                           = Nothing
+        customSelectors     (CustomSelector n s)        = Just (n, s)
+        customSelectors     _                           = Nothing
 
 imp :: Config -> Text -> Builder
 imp cfg t =
@@ -440,6 +443,16 @@ selector cfg = intercalate ("," <> newline cfg) . rec
             Combined   a b -> rec a ++ rec b
           where ins s a b = a <> s <> b
 
+customSelector :: Config -> (Text, Selector) -> Builder
+customSelector cfg (n, s) =
+  mconcat
+    [ "@custom-selector :--"
+    , fromText n
+    , " "
+    , selector cfg s
+    , ";"
+    , newline cfg ]
+
 predicate :: Predicate -> Builder
 predicate ft = mconcat $
   case ft of
@@ -455,3 +468,4 @@ predicate ft = mconcat $
     Pseudo       a   -> [ ":" , fromText a                                             ]
     PseudoFunc   a p -> [ ":" , fromText a, "(", intercalate "," (map fromText p), ")" ]
     PseudoElem   a   -> [ "::", fromText a                                             ]
+    Custom       a   -> [ ":--", fromText a                                             ]

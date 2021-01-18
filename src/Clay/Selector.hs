@@ -135,6 +135,20 @@ attr = Refinement . pure . Attr
 (|=) :: Text -> Text -> Refinement
 (|=) a = Refinement . pure . AttrHyph a
 
+-- | Reference a custom selector by name.
+-- Use 'defineCustomSel' to define a custom selector.
+--
+-- > render $ do
+-- >   sel <- customSel "example"
+-- >   body |> sel ** a ?
+-- >     do background white
+--
+-- > body > :--example a {
+-- >   background: white;
+-- > }
+customSel :: Text -> Refinement
+customSel = Refinement . pure . Custom
+
 
 -------------------------------------------------------------------------------
 
@@ -151,6 +165,7 @@ data Predicate
   | Pseudo       Text
   | PseudoFunc   Text [Text]
   | PseudoElem   Text
+  | Custom       Text
   deriving (Eq, Ord, Show)
 
 newtype Refinement = Refinement { unFilter :: [Predicate] }
@@ -167,6 +182,8 @@ refinementFromText t = Refinement $
     Just (':', s)
       | Just (':',s') <- Text.uncons s
                   -> [PseudoElem s']
+      | ("--",s') <- Text.splitAt 2 s
+                  -> [Custom s']
       | otherwise -> [Pseudo s]
     Just ('@', s) -> [Attr   s]
     _             -> [Attr   t]

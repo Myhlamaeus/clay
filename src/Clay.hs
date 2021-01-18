@@ -58,6 +58,11 @@ module Clay
 , (~=)
 , (|=)
 
+-- ** Custom selectors
+
+, defineCustomSel
+, customSel
+
 -- * Apply media queries.
 -- $media
 
