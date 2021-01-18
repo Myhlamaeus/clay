@@ -64,5 +64,8 @@ nthLastChild  n = func "nth-last-child"   [n]
 nthLastOfType n = func "nth-last-of-type" [n]
 nthOfType     n = func "nth-of-type"      [n]
 
+is :: Selector -> Refinement
+is r = func "is" [Lazy.toStrict (renderSelector r)]
+
 not :: Selector -> Refinement
 not r = func "not" [Lazy.toStrict (renderSelector r)]
