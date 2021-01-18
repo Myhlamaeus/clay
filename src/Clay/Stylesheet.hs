@@ -29,7 +29,14 @@ data NotOrOnly = Not | Only
 data MediaQuery = MediaQuery (Maybe NotOrOnly) MediaType [Feature]
   deriving Show
 
-data Feature = Feature Text (Maybe Value)
+data CustomMediaQuery
+  = CustomMediaQueryList [MediaQuery]
+  | CustomMediaQueryBool Bool
+  deriving Show
+
+data Feature
+  = Feature       Text (Maybe Value)
+  | FeatureCustom Text
   deriving Show
 
 newtype CommentText = CommentText { unCommentText :: Text }
@@ -104,6 +111,7 @@ data Rule
   | Keyframe       Keyframes
   | Import         Text
   | CustomSelector Text       Selector
+  | CustomMedia    Text       CustomMediaQuery
   deriving Show
 
 newtype StyleM a = S (Writer [Rule] a)
@@ -245,6 +253,42 @@ defineCustomSel :: Text -> Selector -> StyleM Refinement
 defineCustomSel n s = do
   rule $ CustomSelector n s
   pure $ customSel n
+
+-------------------------------------------------------------------------------
+
+-- | Reference a custom media query by name.
+-- Use 'defineCustomMedia' to define a custom media query.
+--
+-- > render $ ".test" ? do
+-- >   media <- customMedia "example"
+-- >   query media & background white
+--
+-- > @media(--example) {
+-- >   .test {
+-- >     background: white;
+-- >   }
+-- > }
+customMedia :: Text -> Feature
+customMedia = FeatureCustom
+
+-- | Define a new custom mediaQuery.
+-- Use 'customMedia' to reference an already-defined mediaQuery.
+--
+-- > render $ ".test" ? do
+-- >   media <- defineCustomMedia "example" . CustomMediaQueryList . singleton $ minWidth (px 20)
+-- >   query media & background white
+--
+-- > @custom-media --example (min-width: 20px);
+-- > @media (--example) {
+-- >   .test {
+-- >     background: white;
+-- >   }
+-- > }
+
+defineCustomMedia :: Text -> CustomMediaQuery -> StyleM Feature
+defineCustomMedia n s = do
+  rule $ CustomMedia n s
+  pure $ customMedia n
 
 -------------------------------------------------------------------------------
 

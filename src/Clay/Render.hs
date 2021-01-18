@@ -201,15 +201,20 @@ query cfg q sel rs =
     , newline cfg
     ]
 
-mediaQuery :: MediaQuery -> Builder
-mediaQuery (MediaQuery no ty fs) = mconcat
-  [ "@media "
-  , case no of
+mediaQuery' :: MediaQuery -> Builder
+mediaQuery' (MediaQuery no ty fs) = mconcat
+  [ case no of
       Nothing   -> ""
       Just Not  -> "not "
       Just Only -> "only "
   , mediaType ty
   , mconcat ((" and " <>) . feature <$> fs)
+  ]
+
+mediaQuery :: MediaQuery -> Builder
+mediaQuery mq = mconcat
+  [ "@media "
+  , mediaQuery' mq
   ]
 
 mediaType :: MediaType -> Builder
@@ -221,6 +226,12 @@ feature (Feature k mv) =
     Nothing        -> fromText k
     Just (Value v) -> mconcat
       [ "(" , fromText k , ": " , fromText (plain v) , ")" ]
+feature (FeatureCustom n) =
+  mconcat
+    [ "(--"
+    , fromText n
+    , ")"
+    ]
 
 face :: Config -> [Rule] -> Builder
 face cfg rs = mconcat
@@ -234,12 +245,13 @@ rules cfg sel rs = mconcat
   , ruleAxial cfg sel (mapMaybe propertyAxial rs)
   , ruleDirectional cfg sel (mapMaybe propertyDirectional rs)
   , newline cfg
-  ,             imp    cfg              `foldMap` mapMaybe imports rs
-  ,             kframe cfg              `foldMap` mapMaybe kframes rs
-  ,             face   cfg              `foldMap` mapMaybe faces   rs
+  ,             imp            cfg     `foldMap` mapMaybe imports         rs
+  ,             kframe         cfg     `foldMap` mapMaybe kframes         rs
+  ,             face           cfg     `foldMap` mapMaybe faces           rs
   ,             customSelector cfg     `foldMap` mapMaybe customSelectors rs
-  , (\(a, b) -> rules  cfg (a : sel) b) `foldMap` mapMaybe nested  rs
-  , (\(a, b) -> query  cfg  a   sel  b) `foldMap` mapMaybe queries rs
+  ,             Clay.Render.customMedia    cfg     `foldMap` mapMaybe customMedias    rs
+  , (\(a, b) -> rules  cfg (a : sel) b) `foldMap` mapMaybe nested          rs
+  , (\(a, b) -> query  cfg  a   sel  b) `foldMap` mapMaybe queries         rs
   ]
   where property            (Property m k v)            = Just (m, k, v)
         property            _                           = Nothing
@@ -259,6 +271,8 @@ rules cfg sel rs = mconcat
         imports             _                           = Nothing
         customSelectors     (CustomSelector n s)        = Just (n, s)
         customSelectors     _                           = Nothing
+        customMedias        (CustomMedia n mq)          = Just (n, mq)
+        customMedias        _                           = Nothing
 
 imp :: Config -> Text -> Builder
 imp cfg t =
@@ -452,6 +466,21 @@ customSelector cfg (n, s) =
     , selector cfg s
     , ";"
     , newline cfg ]
+
+customMedia :: Config -> (Text, CustomMediaQuery) -> Builder
+customMedia cfg (n, mq) =
+  mconcat
+    [ "@custom-media --"
+    , fromText n
+    , " "
+    , mq'
+    , ";"
+    , newline cfg ]
+  where
+    mq' = case mq of
+      CustomMediaQueryList mqs -> foldMap mediaQuery' mqs
+      CustomMediaQueryBool True -> "true"
+      CustomMediaQueryBool False -> "false"
 
 predicate :: Predicate -> Builder
 predicate ft = mconcat $

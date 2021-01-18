@@ -69,6 +69,8 @@ module Clay
 , query
 , queryNot
 , queryOnly
+, defineCustomMedia
+, customMedia
 
 -- * Apply key-frame animation.
 
