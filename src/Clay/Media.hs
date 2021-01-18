@@ -23,6 +23,11 @@ module Clay.Media
 , color, monochrome, scan, grid
 , minColor, maxColor, colorIndex, minColorIndex, maxColorIndex, minMonochrome
 , maxMonochrome
+, prefersColorScheme
+
+-- * Color value type.
+
+, ColorScheme, light, dark
 
 -- * Resolution related features.
 
@@ -115,6 +120,22 @@ maxColorIndex = with "max-color-index"
 minMonochrome = with "min-monochrome"
 maxMonochrome = with "max-monochrome"
 
+-- | Adapted from https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme:
+-- > render $ do
+-- >   let schema day night = do
+-- >         ".day" & colors day
+-- >         ".night" & colors night
+-- >       where
+-- >         colors (fg, bg) = color fg >> backgroundColor bg
+-- >   schema (black, (grayish 0xEE)) (white, (grayish 0x33))
+-- >   query all [ (prefersColorScheme dark) ] $ do
+-- >     ".dark-scheme" ? schema (white, (grayish 0x33)) ((grayish 0xdd), black)
+-- >   query all [ (prefersColorScheme light) ] $ do
+-- >     ".light-scheme" ? schema ((grayish 0x55), white) (black, (grayish 0xEE))
+
+prefersColorScheme :: ColorScheme -> Feature
+prefersColorScheme = with "prefers-color-scheme"
+
 resolution, minResolution, maxResolution :: Val a => a -> Feature
 
 resolution    = with "resolution"
@@ -132,3 +153,11 @@ dpi i = Resolution (value (pack (show i) <> "dpi"))
 dppx :: Integer -> Resolution
 dppx i = Resolution (value (pack (show i) <> "dppx"))
 
+-------------------------------------------------------------------------------
+
+newtype ColorScheme = ColorScheme Value
+  deriving (Val, Other)
+
+light, dark :: ColorScheme
+light = ColorScheme . value $ pack "light"
+dark = ColorScheme . value $ pack "dark"
