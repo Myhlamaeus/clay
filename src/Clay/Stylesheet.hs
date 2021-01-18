@@ -323,3 +323,42 @@ addImportant r                   = r
 -- | > all_ revert
 all_ :: Value -> Css
 all_ = key "all"
+
+-------------------------------------------------------------------------------
+
+newtype CustomProp = CustomProp Text
+  deriving (Show, Eq, IsString)
+
+instance Val CustomProp where
+  value k = Value $ Plain $ mconcat ["var(", customPropToText k, ")"]
+
+customPropToText :: CustomProp -> Text
+customPropToText (CustomProp k) = "--" <> k
+
+-- | Set a custom prop.
+-- | > primary = customProp @Color "primary"
+-- | > do
+-- | >   primary red
+-- | >   color (var "primary")
+-- |
+-- | > --primary: #ff0000;
+-- | > color: var(--primary);
+customProp :: Val a => CustomProp -> a -> Css
+customProp k = key $ Key $ Plain $ customPropToText k
+
+-- | Read a custom prop.
+-- | Note that the value cascades down the DOM tree.
+var :: Other a => CustomProp -> a
+var = other . value
+
+-- | Define a getter and a setter for a custom property.
+-- | Note that the value of the getter cascades down the DOM tree.
+-- | > (primary, setPrimary) = defineCustomProp @Color "primary"
+-- | > do
+-- | >   setPrimary red
+-- | >   color primary
+-- |
+-- | > --primary: #ff0000;
+-- | > color: var(--primary);
+defineCustomProp :: (Val a, Other a) => CustomProp -> (a, a -> Css)
+defineCustomProp k = (var k, customProp k)
