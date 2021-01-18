@@ -48,6 +48,15 @@ newtype Key a = Key { unKeys :: Prefixed }
 cast :: Key a -> Key ()
 cast (Key k) = Key k
 
+data PartedKey a = PartedKey { partedPrefix :: [Text], extraPrefix :: Maybe Text, partedInfix :: Text, partedSuffix :: Maybe Text }
+  deriving (Show, Eq)
+
+instance IsString (PartedKey a) where
+  fromString s = PartedKey [] Nothing (fromString s) Nothing
+
+castParted :: PartedKey a -> PartedKey ()
+castParted (PartedKey pfx xpfx k sfx) = PartedKey pfx xpfx k sfx
+
 -------------------------------------------------------------------------------
 
 newtype Value = Value { unValue :: Prefixed }
@@ -113,4 +122,3 @@ infixr !
 
 (!) :: a -> b -> (a, b)
 (!) = (,)
-

@@ -1,9 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 module Clay.Render
 ( Config (..)
+, LayoutMode (..)
+, defaultLayoutMode
+, logical
 , pretty
 , compact
+, useLogical
 , render
+, renderLogical
 , htmlInline
 , putCss
 , renderWith
@@ -25,12 +31,27 @@ import qualified Data.Text.Lazy         as Lazy
 import qualified Data.Text.Lazy.IO      as Lazy
 
 import           Clay.Common            (browsers)
+import           Clay.Directional
 import           Clay.Property
 import           Clay.Selector
 import           Clay.Stylesheet        hiding (Child, query, rule)
 
 import qualified Clay.Stylesheet        as Rule
 
+import Clay.Internal
+
+
+data LayoutMode
+  = LayoutLogical
+  | LayoutConvert
+    { layoutFlipAxes :: Bool
+    , layoutFlipBlock :: Bool
+    , layoutFlipInline :: Bool
+    }
+
+defaultLayoutMode, logical :: LayoutMode
+defaultLayoutMode = LayoutConvert False False False
+logical = LayoutLogical
 
 data Config = Config
   { indentation    :: Builder
@@ -43,7 +64,11 @@ data Config = Config
   , align          :: Bool
   , banner         :: Bool
   , comments       :: Bool
+  , layoutMode     :: LayoutMode
   }
+
+useLogical :: Config -> Config
+useLogical cfg = cfg { layoutMode = logical }
 
 -- | Configuration to print to a pretty human readable CSS output.
 
@@ -59,6 +84,7 @@ pretty = Config
   , align          = True
   , banner         = True
   , comments       = True
+  , layoutMode     = defaultLayoutMode
   }
 
 -- | Configuration to print to a compacted unreadable CSS output.
@@ -75,6 +101,7 @@ compact = Config
   , align          = False
   , banner         = False
   , comments       = False
+  , layoutMode     = defaultLayoutMode
   }
 
 -- | Configuration to print to a compacted unreadable CSS output for embedding inline with HTML.
@@ -91,6 +118,7 @@ htmlInline = Config
   , align          = False
   , banner         = False
   , comments       = False
+  , layoutMode     = defaultLayoutMode
   }
 
 -- | Render to CSS using the default configuration (`pretty`) and directly
@@ -104,6 +132,12 @@ putCss = Lazy.putStr . render
 
 render :: Css -> Lazy.Text
 render = renderWith pretty []
+
+-- | Render a stylesheet with the default configuration using logical values and properties.
+-- The pretty printer is used by default.
+
+renderLogical :: Css -> Lazy.Text
+renderLogical = renderWith (useLogical pretty) []
 
 -- | Render a stylesheet with a custom configuration and an optional outer
 -- scope.
@@ -197,6 +231,8 @@ face cfg rs = mconcat
 rules :: Config -> [App] -> [Rule] -> Builder
 rules cfg sel rs = mconcat
   [ rule cfg sel (mapMaybe property rs)
+  , ruleAxial cfg sel (mapMaybe propertyAxial rs)
+  , ruleDirectional cfg sel (mapMaybe propertyDirectional rs)
   , newline cfg
   ,             imp    cfg              `foldMap` mapMaybe imports rs
   ,             kframe cfg              `foldMap` mapMaybe kframes rs
@@ -204,18 +240,22 @@ rules cfg sel rs = mconcat
   , (\(a, b) -> rules  cfg (a : sel) b) `foldMap` mapMaybe nested  rs
   , (\(a, b) -> query  cfg  a   sel  b) `foldMap` mapMaybe queries rs
   ]
-  where property (Property m k v) = Just (m, k, v)
-        property _                = Nothing
-        nested   (Nested a ns   ) = Just (a, ns)
-        nested   _                = Nothing
-        queries  (Query q ns    ) = Just (q, ns)
-        queries  _                = Nothing
-        kframes  (Keyframe fs   ) = Just fs;
-        kframes  _                = Nothing
-        faces    (Face ns       ) = Just ns
-        faces    _                = Nothing
-        imports  (Import i      ) = Just i
-        imports  _                = Nothing
+  where property            (Property m k v)            = Just (m, k, v)
+        property            _                           = Nothing
+        propertyAxial       (PropertyAxial m k v)       = Just (m, k, v)
+        propertyAxial       _                           = Nothing
+        propertyDirectional (PropertyDirectional m k v) = Just (m, k, v)
+        propertyDirectional _                           = Nothing
+        nested              (Nested a ns)               = Just (a, ns)
+        nested              _                           = Nothing
+        queries             (Query q ns )               = Just (q, ns)
+        queries             _                           = Nothing
+        kframes             (Keyframe fs)               = Just fs
+        kframes             _                           = Nothing
+        faces               (Face ns    )               = Just ns
+        faces               _                           = Nothing
+        imports             (Import i   )               = Just i
+        imports             _                           = Nothing
 
 imp :: Config -> Text -> Builder
 imp cfg t =
@@ -227,20 +267,30 @@ imp cfg t =
 
 -- | A key-value pair with associated comment.
 type KeyVal = ([Modifier], Key (), Value)
+type PartedKeyVal a = ([Modifier], PartedKey (), a)
+
+rule' :: Config -> [App] -> [Representation] -> Builder
+rule' _   _   []    = mempty
+rule' cfg sel props =
+  mconcat
+    [ selector cfg (merger sel)
+    , newline cfg
+    , lbrace cfg
+    , newline cfg
+    , properties cfg props
+    , rbrace cfg
+    , newline cfg
+    ]
 
 rule :: Config -> [App] -> [KeyVal] -> Builder
-rule _   _   []    = mempty
-rule cfg sel props =
-  let xs = collect =<< props
-   in mconcat
-      [ selector cfg (merger sel)
-      , newline cfg
-      , lbrace cfg
-      , newline cfg
-      , properties cfg xs
-      , rbrace cfg
-      , newline cfg
-      ]
+rule cfg sel props = rule' cfg sel $ collect =<< props
+
+ruleAxial :: Config -> [App] -> [PartedKeyVal (Axial Value)] -> Builder
+ruleAxial cfg sel props = rule' cfg sel $ collectAxial (layoutMode cfg) =<< props
+
+ruleDirectional :: Config -> [App] -> [PartedKeyVal (Directional Value)] -> Builder
+ruleDirectional cfg sel props = rule' cfg sel $ collectDirectional (layoutMode cfg) =<< props
+
 
 merger :: [App] -> Selector
 merger []     = "" -- error "this should be fixed!"
@@ -292,6 +342,89 @@ properties cfg xs =
                   _              -> mempty
              in mconcat [ind, fromText k, pad, ":", sep cfg, fromText v, imptant, comm]
 
+fromLogical :: IsDirectional dir => LayoutMode -> dir a -> dir a
+fromLogical LayoutLogical a = a
+fromLogical (LayoutConvert False False False) a = a
+fromLogical (LayoutConvert True b i) a = fromLogical (LayoutConvert False b i) $ flipAxes a
+fromLogical (LayoutConvert f True i) a = fromLogical (LayoutConvert f False i) $ flipOverInline a
+fromLogical (LayoutConvert f b True) a = fromLogical (LayoutConvert f b False) $ flipOverBlock a
+
+collectAxial :: LayoutMode -> PartedKeyVal (Axial Value) -> [Representation]
+collectAxial l (ms, PartedKey pfx Nothing "inset" Nothing, ax) = case (l, fromLogical l ax) of
+  (LayoutLogical, AxialBoth a) -> collect (ms, logicalShorthand, a)
+  (LayoutLogical, AxialEach b i) -> collect (ms, logicalShorthand, noCommas [b, i])
+  (LayoutLogical, ax') -> case axialToTuple ax' of
+    (Just b, Just i) -> collect (ms, logicalShorthand, noCommas [b, i])
+    (b, i) -> join $ zipWith (\k v -> foldMap (collect . (ms, k, )) v) logicalKeys [b, i]
+  (_, ax') -> case axialToTuple ax' of
+    (b, i) -> join $ zipWith (\k v -> foldMap (collect . (ms, k, )) v) physicalKeys [b, i, b, i]
+  where
+    ky n = case pfx of
+      [] -> Key $ Plain n
+      pfx' -> Key $ Prefixed $ (, n) <$> pfx'
+    logicalShorthand = ky "inset"
+    logicalKeys = ky . ("inset-" <>) <$> ["block", "inline"]
+    physicalKeys = ky <$> ["top", "right", "bottom", "left"]
+collectAxial l (ms, PartedKey pfx xpfx k sfx, ax) = case (l, k, fromLogical l ax) of
+  (LayoutLogical, "size", ax') -> case axialToTuple ax' of
+    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) logicalKeys [b, i]
+  (_, "size", ax') -> case axialToTuple ax' of
+    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) physicalKeys [b, i]
+  (_, _, AxialBoth a) -> collect (ms, shorthand, a)
+  (LayoutLogical, "border", AxialEach b i) -> join $ zipWith (\k' -> collect . (ms, k', )) logicalKeys [b, i]
+  (LayoutLogical, _, AxialEach b i) -> collect (ms, shorthand, noCommas ["logical", b, i])
+  (LayoutLogical, _, ax') -> case axialToTuple ax' of
+    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) logicalKeys [b, i]
+  (_, "border", AxialEach b i) -> join $ zipWith (\k' -> collect . (ms, k', )) physicalKeys [b, i, b, i]
+  (_, _, AxialEach b i) -> collect (ms, shorthand, noCommas [b, i])
+  (_, _, ax') -> case axialToTuple ax' of
+    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) physicalKeys [b, i, b, i]
+  where
+    xprefix = (maybe "" (<> "-") xpfx <>)
+    ky n = case pfx of
+      [] -> Key $ Plain $ xprefix n
+      pfx' -> Key $ Prefixed $ (, xprefix n) <$> pfx'
+    shorthand = ky k
+    suffix = (<> maybe "" ("-" <>) sfx)
+    logicalKeys = case k of
+      "size" -> ky <$> ["block-size", "inline-size"]
+      k' -> ky . suffix . ((k' <> "-") <>) <$> ["block", "inline"]
+    physicalKeys = case k of
+      "size" -> ky <$> ["height", "width"]
+      k' -> ky . suffix . ((k' <> "-") <>) <$> ["top", "right", "bottom", "left"]
+
+collectDirectional :: LayoutMode -> PartedKeyVal (Directional Value) -> [Representation]
+collectDirectional l (ms, PartedKey pfx Nothing "inset" Nothing, dir) = case (l, directionalToTuple $ fromLogical l dir) of
+  (LayoutLogical, (Just bs, Just is, Just be, Just ie)) -> collect (ms, logicalShorthand, noCommas [bs, is, be, ie])
+  (LayoutLogical, (bs, is, be, ie)) -> join $ zipWith (\k -> foldMap (collect . (ms, k, ))) logicalKeys [bs, is, be, ie]
+  -- inline-start and inline-end are flipped in physical
+  (_, (bs, is, be, ie)) -> join $ zipWith (\k v -> foldMap (collect . (ms, k, )) v) physicalKeys [bs, ie, be, is]
+  where
+    ky n = case pfx of
+      [] -> Key $ Plain n
+      pfx' -> Key $ Prefixed $ (, n) <$> pfx'
+    logicalShorthand = ky "inset"
+    logicalKeys = ky . ("inset-" <>) <$> ["block-start", "inline-start", "block-end", "inline-end"]
+    physicalKeys = ky <$> ["top", "right", "bottom", "left"]
+collectDirectional l (ms, PartedKey pfx xpfx k sfx, dir) = case (l, k, directionalToTuple $ fromLogical l dir) of
+  (LayoutLogical, "border", (Just bs, Just is, Just be, Just ie)) -> join $ zipWith (\k' -> collect . (ms, k', )) logicalKeys [bs, is, be, ie]
+  (LayoutLogical, _, (Just bs, Just is, Just be, Just ie)) -> collect (ms, shorthand, noCommas ["logical", bs, is, be, ie])
+  (LayoutLogical, _, (bs, is, be, ie)) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) logicalKeys [bs, is, be, ie]
+  -- inline-start and inline-end are flipped in physical
+  (LayoutConvert _ _ _, "border", (Just bs, Just is, Just be, Just ie)) -> join $ zipWith (\k' -> collect . (ms, k', )) physicalKeys [bs, ie, be, is]
+  (_, _, (Just bs, Just is, Just be, Just ie)) -> collect (ms, shorthand, noCommas [bs, ie, be, is])
+  (_, _, (bs, is, be, ie)) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) physicalKeys [bs, ie, be, is]
+  where
+    xprefix = (maybe "" (<> "-") xpfx <>)
+    ky n = case pfx of
+      [] -> Key $ Plain $ xprefix n
+      pfx' -> Key $ Prefixed $ (, xprefix n) <$> pfx'
+    suffix = (<> maybe "" ("-" <>) sfx)
+    shorthand = ky $ suffix k
+    logicalKeys = ky . suffix . ((k <> "-") <>) <$> ["block-start", "inline-start", "block-end", "inline-end"]
+    -- inline-start and inline-end are flipped in physical
+    physicalKeys = ky . suffix . ((k <> "-") <>) <$> ["top", "right", "bottom", "left"]
+
 selector :: Config -> Selector -> Builder
 selector Config { lbrace = "", rbrace = "" } = rec
   where rec _ = ""
@@ -322,4 +455,3 @@ predicate ft = mconcat $
     Pseudo       a   -> [ ":" , fromText a                                             ]
     PseudoFunc   a p -> [ ":" , fromText a, "(", intercalate "," (map fromText p), ")" ]
     PseudoElem   a   -> [ "::", fromText a                                             ]
-

@@ -14,6 +14,9 @@ import Data.Text (Text)
 import Clay.Selector hiding (Child)
 import Clay.Property
 import Clay.Common
+import Clay.Directional
+
+import Clay.Internal
 
 -------------------------------------------------------------------------------
 
@@ -58,11 +61,46 @@ data App
 data Keyframes = Keyframes Text [(Double, [Rule])]
   deriving Show
 
+class IsDirectional dir where
+  keyDirectional :: Val a => PartedKey a -> dir a -> Css
+  bothToEach :: dir a -> dir a
+  flipAxes :: dir a -> dir a
+  flipOverBlock :: dir a -> dir a
+  flipOverInline :: dir a -> dir a
+
+instance IsDirectional Axial where
+  keyDirectional = keyAxial
+  bothToEach (AxialBoth a) = AxialEach a a
+  bothToEach a = a
+  flipAxes (AxialEach b i) = AxialEach i b
+  flipAxes (AxialBlock b) = AxialInline b
+  flipAxes (AxialInline i) = AxialBlock i
+  flipAxes ax = ax
+  flipOverBlock = id
+  flipOverInline = id
+
+instance IsDirectional Directional where
+  keyDirectional k v = rule $ PropertyDirectional [] (castParted k) (value <$> v)
+  bothToEach (DirectionalEach s e) = DirectionalEach (bothToEach s) (bothToEach e)
+  bothToEach (DirectionalStart s) = DirectionalStart (bothToEach s)
+  bothToEach (DirectionalEnd e) = DirectionalEnd (bothToEach e)
+  flipAxes (DirectionalEach s e) = DirectionalEach (flipAxes s) (flipAxes e)
+  flipAxes (DirectionalStart s) = DirectionalStart (flipAxes s)
+  flipAxes (DirectionalEnd e) = DirectionalEnd (flipAxes e)
+  -- bs is be ie -> bs ie be is
+  flipOverBlock = unsafeModifyDirectionalAsTuple $ \(bs, is, be, ie) -> (bs, ie, be, is)
+  -- bs is be ie -> be is bs ie
+  flipOverInline = unsafeModifyDirectionalAsTuple $ \(bs, is, be, ie) -> (be, is, bs, ie)
+
+type BorderEntry = (Maybe Value, Maybe Value, Maybe Value)
+
 data Rule
-  = Property [Modifier] (Key ()) Value
-  | Nested   App [Rule]
-  | Query    MediaQuery [Rule]
-  | Face     [Rule]
+  = Property             [Modifier] (Key ())       Value
+  | PropertyAxial        [Modifier] (PartedKey ()) (Axial Value)
+  | PropertyDirectional  [Modifier] (PartedKey ()) (Directional Value)
+  | Nested   App         [Rule]
+  | Query    MediaQuery  [Rule]
+  | Face                 [Rule]
   | Keyframe Keyframes
   | Import   Text
   deriving Show
@@ -95,6 +133,9 @@ instance Monoid Css where
 
 key :: Val a => Key a -> a -> Css
 key k v = rule $ Property [] (cast k) (value v)
+
+keyAxial :: Val a => PartedKey a -> Axial a -> Css
+keyAxial k v = rule $ PropertyAxial [] (castParted k) (value <$> v)
 
 -- | Add a new style property to the stylesheet with the specified `Key` and
 -- value, like `key` but use a `Prefixed` key.
@@ -201,4 +242,10 @@ addImportant :: Rule -> Rule
 addImportant (Property ms@(filter (isJust . _Important) -> (_:_)) k v) =
   Property ms k v
 addImportant (Property ms k v  ) = Property (Important : ms) k v
+addImportant (PropertyAxial ms@(filter (isJust . _Important) -> (_:_)) k v) =
+  PropertyAxial ms k v
+addImportant (PropertyAxial ms k v  ) = PropertyAxial (Important : ms) k v
+addImportant (PropertyDirectional ms@(filter (isJust . _Important) -> (_:_)) k v) =
+  PropertyDirectional ms k v
+addImportant (PropertyDirectional ms k v  ) = PropertyDirectional (Important : ms) k v
 addImportant r                   = r

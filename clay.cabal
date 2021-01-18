@@ -45,10 +45,12 @@ Library
     Clay.Background
     Clay.Border
     Clay.Box
+    Clay.BoxModel
     Clay.Color
     Clay.Comments
     Clay.Common
     Clay.Dynamic
+    Clay.Directional
     Clay.Display
     Clay.Elements
     Clay.Filter
@@ -57,7 +59,7 @@ Library
     Clay.FontFace
     Clay.Geometry
     Clay.Gradient
-    Clay.Grid 
+    Clay.Grid
     Clay.List
     Clay.Media
     Clay.Mask
@@ -71,6 +73,9 @@ Library
     Clay.Time
     Clay.Transform
     Clay.Transition
+
+  Other-Modules:
+    Clay.Internal
 
   Build-Depends:
     base  >= 4.11 && < 5,

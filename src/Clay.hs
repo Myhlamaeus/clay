@@ -106,6 +106,8 @@ module Clay
 , module Clay.Background
 , module Clay.Border
 , module Clay.Box
+, module Clay.Directional
+, IsDirectional (..)
 , module Clay.Display
 , module Clay.Dynamic
 , module Clay.Flexbox
@@ -150,6 +152,7 @@ import Clay.Color
 import Clay.Time
 import Clay.Comments (commenting)
 import Clay.Common
+import Clay.Directional
 import Clay.Display    hiding (table)
 import Clay.Dynamic
 import Clay.Flexbox    hiding (flex, nowrap, wrap)
