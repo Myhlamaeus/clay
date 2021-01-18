@@ -314,3 +314,12 @@ addImportant (PropertyDirectional ms@(filter (isJust . _Important) -> (_:_)) k v
   PropertyDirectional ms k v
 addImportant (PropertyDirectional ms k v  ) = PropertyDirectional (Important : ms) k v
 addImportant r                   = r
+
+-------------------------------------------------------------------------------
+
+-- | Set the value of all properties except for unicode-bidi, direction, and custom properties.
+-- | > all_ unset
+-- | > all_ initial
+-- | > all_ revert
+all_ :: Value -> Css
+all_ = key "all"
