@@ -43,7 +43,7 @@ import Clay.Property
 import Clay.Stylesheet
 
 newtype ListStyleType = ListStyleType Value
-  deriving (Val, Initial, Inherit, None, Other)
+  deriving (Val, GlobalValues, None, Other)
 
 disc, armenian, circleListStyle, cjkIdeographic, decimal, decimalLeadingZero, georgian
     , hebrew, hiragana, hiraganaIroha, katakana, katakanaIroha, lowerAlpha
@@ -74,7 +74,7 @@ listStyleType :: ListStyleType -> Css
 listStyleType = key "list-style-type"
 
 newtype ListStylePosition = ListStylePosition Value
-  deriving (Val, Initial, Inherit, None, Other)
+  deriving (Val, GlobalValues, None, Other)
 
 inside, outside :: ListStylePosition
 
@@ -85,7 +85,7 @@ listStylePosition :: ListStylePosition -> Css
 listStylePosition = key "list-style-position"
 
 newtype ListStyleImage = ListStyleImage Value
-  deriving (Val, Initial, Inherit, None, Other)
+  deriving (Val, GlobalValues, None, Other)
 
 listStyleImage :: ListStyleImage -> Css
 listStyleImage = key "list-style-image"

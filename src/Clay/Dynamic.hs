@@ -49,7 +49,7 @@ userInput = prefixed (browsers <> "user-input")
 -- | Selection mode.
 
 newtype UserInput = UserInput Value
-  deriving (Val, Inherit, None)
+  deriving (Val, GlobalValues, None)
 
 -- | Selection mode.
 
@@ -69,7 +69,7 @@ userModify = prefixed (browsers <> "user-modify")
 -- | Selection mode.
 
 newtype UserModify = UserModify Value
-  deriving (Val, Inherit)
+  deriving (Val, GlobalValues)
 
 -- | Selection mode.
 
@@ -90,7 +90,7 @@ userSelect = prefixed (browsers <> "user-select")
 -- | Selection mode.
 
 newtype UserSelect = UserSelect Value
-  deriving (Val, Inherit, None, All)
+  deriving (Val, GlobalValues, None, All)
 
 -- | Selection mode.
 
@@ -112,7 +112,7 @@ userFocus = prefixed (browsers <> "user-focus")
 -- | Focus behaviour.
 
 newtype UserFocus = UserFocus Value
-  deriving (Val, Inherit, None, Normal, Auto)
+  deriving (Val, GlobalValues, None, Normal, Auto)
 
 -- | Focus mode.
 
@@ -123,4 +123,3 @@ selectBefore = UserFocus "select-before"
 selectAfter  = UserFocus "select-after"
 selectSame   = UserFocus "select-same"
 selectMenu   = UserFocus "select-menu"
-

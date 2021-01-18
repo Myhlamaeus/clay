@@ -128,7 +128,7 @@ backgroundColor = key "background-color"
 -------------------------------------------------------------------------------
 
 newtype BackgroundPosition = BackgroundPosition Value
-  deriving (Val, Other, Inherit)
+  deriving (Val, Other, GlobalValues)
 
 placed :: Side -> Side -> BackgroundPosition
 placed a b = BackgroundPosition (value (a, b))
@@ -145,7 +145,7 @@ backgroundPositions = key "background-position"
 -------------------------------------------------------------------------------
 
 newtype BackgroundSize = BackgroundSize Value
-  deriving (Val, Other, Inherit)
+  deriving (Val, Other, GlobalValues)
 
 instance Auto BackgroundSize where auto = auto `by` auto
 
@@ -166,7 +166,7 @@ backgroundSizes = key "background-size"
 -------------------------------------------------------------------------------
 
 newtype BackgroundRepeat = BackgroundRepeat Value
-  deriving (Val, Other, Inherit, None)
+  deriving (Val, Other, GlobalValues, None)
 
 repeat, space, round, noRepeat :: BackgroundRepeat
 
@@ -192,7 +192,7 @@ backgroundRepeats = key "background-repeat"
 -------------------------------------------------------------------------------
 
 newtype BackgroundImage = BackgroundImage Value
-  deriving (Val, Other, Inherit, None)
+  deriving (Val, Other, GlobalValues, None)
 
 url :: Text -> BackgroundImage
 url u = BackgroundImage (value ("url(\"" <> u <> "\")"))
@@ -206,7 +206,7 @@ backgroundImages = key "background-image"
 -------------------------------------------------------------------------------
 
 newtype BackgroundOrigin = BackgroundOrigin Value
-  deriving (Val, Other, Inherit)
+  deriving (Val, Other, GlobalValues)
 
 origin :: BoxType -> BackgroundOrigin
 origin b = BackgroundOrigin (value b)
@@ -220,7 +220,7 @@ backgroundOrigins = key "background-origin"
 -------------------------------------------------------------------------------
 
 newtype BackgroundClip = BackgroundClip Value
-  deriving (Val, Other, Inherit)
+  deriving (Val, Other, GlobalValues)
 
 boxClip :: BoxType -> BackgroundClip
 boxClip b = BackgroundClip (value b)
@@ -234,7 +234,7 @@ backgroundClips = key "background-clip"
 -------------------------------------------------------------------------------
 
 newtype BackgroundAttachment = BackgroundAttachment Value
-  deriving (Other, Val, Inherit)
+  deriving (Other, Val, GlobalValues)
 
 attachFixed, attachScroll :: BackgroundAttachment
 attachFixed  = BackgroundAttachment "fixed"
@@ -249,7 +249,7 @@ backgroundAttachments = key "background-attachment"
 -------------------------------------------------------------------------------
 
 newtype Side = Side Value
-  deriving (Val, Other, Inherit)
+  deriving (Val, Other, GlobalValues)
 
 -- | We have to prefix these values to avoid conflict with existing property
 -- names.
@@ -284,4 +284,3 @@ class Val a => Loc a where
 instance Loc Side
 instance Loc (Size a)
 instance (Loc a, Loc b) => Loc (a, b)
-

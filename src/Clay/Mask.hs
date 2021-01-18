@@ -90,7 +90,7 @@ instance Mask BackgroundImage
 -------------------------------------------------------------------------------
 
 newtype MaskComposite = MaskComposite Value
-  deriving (Val, Other, Inherit, None)
+  deriving (Val, Other, GlobalValues, None)
 
 clear, copy
   , sourceOver, sourceIn, sourceOut, sourceAtop
@@ -170,4 +170,3 @@ maskAttachment = pkey "mask-attachment"
 
 maskAttachments :: [BackgroundAttachment] -> Css
 maskAttachments = pkey "mask-attachment"
-

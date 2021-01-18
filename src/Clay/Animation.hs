@@ -148,7 +148,7 @@ iterationCount = IterationCount . value
 -------------------------------------------------------------------------------
 
 newtype AnimationName = AnimationName Value
-  deriving (Val, Other, IsString, Initial, Inherit, Unset)
+  deriving (Val, Other, IsString, GlobalValues)
 
 animationName :: AnimationName -> Css
 animationName = prefixed (browsers <> "animation-name")
@@ -181,4 +181,3 @@ backwards = FillMode "backwards"
 
 animationTimingFunction :: TimingFunction -> Css
 animationTimingFunction = prefixed (browsers <> "animation-timing-function")
-

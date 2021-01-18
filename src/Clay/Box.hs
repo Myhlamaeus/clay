@@ -32,7 +32,7 @@ import Clay.Border
 -------------------------------------------------------------------------------
 
 newtype BoxType = BoxType Value
-  deriving (Val, Inherit)
+  deriving (Val, GlobalValues)
 
 paddingBox, borderBox, contentBox :: BoxType
 
@@ -52,24 +52,24 @@ boxSizing = prefixed (browsers <> "box-sizing")
 -- === Formal argument syntax
 --
 -- > none | <shadow>#
--- > where 
+-- > where
 -- > <shadow> = inset? && <length>{2,4} && <color>?
--- > 
--- > where 
+-- >
+-- > where
 -- > <color> = <rgb()> | <rgba()> | <hsl()> | <hsla()> | <hex-color> | <named-color> | currentcolor | <deprecated-system-color>
--- > 
--- > where 
+-- >
+-- > where
 -- > <rgb()> = rgb( [ [ <percentage>{3} | <number>{3} ] [ / <alpha-value> ]? ] | [ [ <percentage>#{3} | <number>#{3} ] , <alpha-value>? ] )
 -- > <rgba()> = rgba( [ [ <percentage>{3} | <number>{3} ] [ / <alpha-value> ]? ] | [ [ <percentage>#{3} | <number>#{3} ] , <alpha-value>? ] )
 -- > <hsl()> = hsl( [ <hue> <percentage> <percentage> [ / <alpha-value> ]? ] | [ <hue>, <percentage>, <percentage>, <alpha-value>? ] )
 -- > <hsla()> = hsla( [ <hue> <percentage> <percentage> [ / <alpha-value> ]? ] | [ <hue>, <percentage>, <percentage>, <alpha-value>? ] )
--- > 
--- > where 
+-- >
+-- > where
 -- > <alpha-value> = <number> | <percentage>
 -- > <hue> = <number> | <angle>
 
 newtype BoxShadow = BoxShadow Value
-  deriving (Val, Inherit, Initial, Unset, None, Other)
+  deriving (Val, GlobalValues, None, Other)
 
 -- | This function will usually take a singleton list, but requiring a (non-empty)
 -- list prevents accidentally applying the modifiers ('bsInset', 'bsColor')
@@ -120,7 +120,7 @@ shadowWithSpread x y blurRadius spreadRadius =
     BoxShadow . value $ (x ! y ! blurRadius ! spreadRadius)
 
 -- | Adapt the provided @box-shadow@ with the @inset@ prefix.
--- 
+--
 -- > boxShadow . pure . bsInset
 bsInset :: BoxShadow -> BoxShadow
 bsInset (BoxShadow v) = BoxShadow . value $ ("inset" :: Value, v)

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DerivingVia #-}
 module Clay.Color where
 
 import Data.Char (isHexDigit)
@@ -19,6 +20,7 @@ data Color
   | Hsla Integer Float   Float   Float
   | Other Value
   deriving (Show, Eq)
+  deriving (GlobalValues) via (GlobalValuesViaOther Color)
 
 -- * Color constructors.
 
@@ -81,7 +83,7 @@ toRgba color =
                          | otherwise           = (chroma, 0     ,  x)
 
         c@(Rgba _ _ _ _) -> c
-        
+
         Other _          -> error "Invalid to pass Other to toRgba."
 
 
@@ -110,7 +112,7 @@ toHsla color =
                   h = if h'' < 0 then h''+ 360 else h''
 
         c@(Hsla _ _ _ _) -> c
-        
+
         Other _          -> error "Invalid to pass Other to toHsla."
 
 -- * Computing with colors.
@@ -150,8 +152,8 @@ darken factor color =
 lerp :: Float -> Color -> Color -> Color
 lerp factor startColor boundColor =
     case (startColor, boundColor) of
-        (Other _, _) -> error "Other cannot be lerped." 
-        (_, Other _) -> error "Other cannot be lerped." 
+        (Other _, _) -> error "Other cannot be lerped."
+        (_, Other _) -> error "Other cannot be lerped."
         (color@(Hsla {}), bound) -> toHsla $ lerp factor (toRgba color) bound
 
         (start, color@(Hsla {})) -> toHsla $ lerp factor start (toRgba color)
@@ -190,7 +192,6 @@ instance Val Color where
 
 instance None    Color where none    = Other "none"
 instance Auto    Color where auto    = Other "auto"
-instance Inherit Color where inherit = Other "inherit"
 instance Other   Color where other   = Other
 
 instance IsString Color where
@@ -387,4 +388,3 @@ white                = rgb 255 255 255
 whitesmoke           = rgb 245 245 245
 yellow               = rgb 255 255   0
 yellowgreen          = rgb 154 205  50
-

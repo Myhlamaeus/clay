@@ -95,14 +95,14 @@ float :: FloatStyle -> Css
 float = key "float"
 
 newtype FloatStyle = FloatStyle Value
-  deriving (Val,None,Inherit)
+  deriving (Val, None, GlobalValues)
 
 floatLeft, floatRight :: FloatStyle
 floatLeft = FloatStyle "left"
 floatRight = FloatStyle "right"
 
 newtype Clear = Clear Value
-  deriving (Val, Other, None, Inherit)
+  deriving (Val, Other, None, GlobalValues)
 
 both :: Clear
 both = Clear "both"
@@ -119,7 +119,7 @@ clear = key "clear"
 -------------------------------------------------------------------------------
 
 newtype Position = Position Value
-  deriving (Val, Other, Inherit)
+  deriving (Val, Other, GlobalValues)
 
 static, absolute, fixed, relative, sticky :: Position
 
@@ -135,7 +135,7 @@ position = key "position"
 -------------------------------------------------------------------------------
 
 newtype Display = Display Value
-  deriving (Val, Other, None, Inherit)
+  deriving (Val, Other, None, GlobalValues)
 
 inline, block, listItem, runIn, inlineBlock, table, displayTable, inlineTable, tableRowGroup,
   tableHeaderGroup, tableFooterGroup, tableRow, tableColumnGroup, tableColumn,
@@ -160,7 +160,7 @@ tableColumn      = Display "table-column"
 tableCell        = Display "table-cell"
 tableCaption     = Display "table-caption"
 displayNone      = Display "none"
-displayInherit   = Display "inherit"
+displayInherit   = inherit
 flex             = Display "flex"
 inlineFlex       = Display "inline-flex"
 grid             = Display "grid"
@@ -172,7 +172,7 @@ display = key "display"
 -------------------------------------------------------------------------------
 
 newtype Overflow = Overflow Value
-  deriving (Val, Other, Auto, Inherit, Hidden, Visible)
+  deriving (Val, Other, Auto, GlobalValues, Hidden, Visible)
 
 scroll :: Overflow
 scroll = Overflow "scroll"
@@ -186,7 +186,7 @@ overflowY = key "overflow-y"
 -------------------------------------------------------------------------------
 
 newtype Visibility = Visibility Value
-  deriving (Val, Other, Auto, Inherit, Hidden, Visible)
+  deriving (Val, Other, Auto, GlobalValues, Hidden, Visible)
 
 separate, collapse :: Visibility
 
@@ -199,7 +199,7 @@ visibility = key "visibility"
 -------------------------------------------------------------------------------
 
 newtype Clip = Clip Value
-  deriving (Val, Other, Auto, Inherit)
+  deriving (Val, Other, Auto, GlobalValues)
 
 clip :: Clip -> Css
 clip = key "clip"
@@ -218,7 +218,7 @@ zIndex i = key "z-index" (fromString (show i) :: Value)
 -------------------------------------------------------------------------------
 
 newtype PointerEvents = PointerEvents Value
-  deriving (Val, Other, Auto, Visible, None, Inherit)
+  deriving (Val, Other, Auto, Visible, None, GlobalValues)
 
 visiblePainted, visibleFill, visibleStroke, painted,
   fillEvents, strokeEvents, allEvents :: PointerEvents
@@ -262,7 +262,7 @@ class (Val a) => Cursor a where
     cursor :: a -> Css
     cursor = key "cursor"
 
-newtype CursorValue a = CursorValue Value deriving (Val,Inherit,Auto,None)
+newtype CursorValue a = CursorValue Value deriving (Val, GlobalValues, Auto, None)
 
 instance Cursor (CursorValue a)
 

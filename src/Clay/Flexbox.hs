@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Clay.Flexbox where
 
-import Clay.Common     (Auto, Baseline, Center, Inherit, Other)
+import Clay.Common     (Auto, Baseline, Center, GlobalValues, Other)
 import Clay.Property
 import Clay.Size       (Size)
 import Clay.Stylesheet
@@ -25,7 +25,7 @@ instance Stretch Value      where stretch      = "stretch"
 -------------------------------------------------------------------------------
 
 newtype AlignContentValue = AlignContentValue Value
-  deriving (Val, Other, Inherit, FlexStart, FlexEnd
+  deriving (Val, Other, GlobalValues, FlexStart, FlexEnd
           , Center, SpaceBetween, SpaceAround, Stretch)
 
 alignContent :: AlignContentValue -> Css
@@ -34,7 +34,7 @@ alignContent = key "align-content"
 -------------------------------------------------------------------------------
 
 newtype AlignItemsValue = AlignItemValue Value
-  deriving (Val, Other, Inherit, Baseline
+  deriving (Val, Other, GlobalValues, Baseline
           , Center, FlexEnd, FlexStart, Stretch)
 
 alignItems :: AlignItemsValue -> Css
@@ -43,7 +43,7 @@ alignItems = key "align-items"
 -------------------------------------------------------------------------------
 
 newtype AlignSelfValue = AlignSelfValue Value
-  deriving (Val, Other, Inherit, Auto, Baseline
+  deriving (Val, Other, GlobalValues, Auto, Baseline
           , Center, FlexEnd, FlexStart, Stretch)
 
 alignSelf :: AlignSelfValue -> Css
@@ -106,7 +106,7 @@ flexWrap = key "flex-wrap"
 -------------------------------------------------------------------------------
 
 newtype JustifyContentValue = JustifyContentValue Value
-  deriving (Val, Other, Inherit, Center, FlexEnd
+  deriving (Val, Other, GlobalValues, Center, FlexEnd
           , FlexStart, SpaceAround, SpaceBetween)
 
 justifyContent :: JustifyContentValue -> Css

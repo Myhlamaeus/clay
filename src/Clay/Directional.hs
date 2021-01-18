@@ -21,13 +21,15 @@ instance All a => All (Axial a) where all = AxialBoth Clay.Common.all
 instance Auto a => Auto (Axial a) where auto = AxialBoth auto
 instance Baseline a => Baseline (Axial a) where baseline = AxialBoth baseline
 instance Center a => Center (Axial a) where center = AxialBoth center
-instance Inherit a => Inherit (Axial a) where inherit = AxialBoth inherit
 instance None a => None (Axial a) where none = AxialBoth none
 instance Normal a => Normal (Axial a) where normal = AxialBoth normal
 instance Visible a => Visible (Axial a) where visible = AxialBoth visible
 instance Hidden a => Hidden (Axial a) where hidden = AxialBoth hidden
-instance Initial a => Initial (Axial a) where initial = AxialBoth initial
-instance Unset a => Unset (Axial a) where unset = AxialBoth unset
+instance GlobalValues a => GlobalValues (Axial a) where
+  inherit = AxialBoth inherit
+  initial = AxialBoth initial
+  revert = AxialBoth revert
+  unset = AxialBoth unset
 
 all', block', inline' :: a -> Axial a
 

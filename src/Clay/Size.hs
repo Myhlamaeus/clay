@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE
     OverloadedStrings
   , GeneralizedNewtypeDeriving
@@ -97,6 +98,7 @@ data Size a =
   MultSize Double (Size a) |
   DivSize Double (Size a) |
   OtherSize Value
+  deriving (GlobalValues) via (GlobalValuesViaOther (Size a))
 
 deriving instance Show (Size a)
 
@@ -115,7 +117,6 @@ instance Val (Size a) where
 
 instance Auto (Size a) where auto = OtherSize Clay.Common.autoValue
 instance Normal (Size a) where normal = OtherSize Clay.Common.normalValue
-instance Inherit (Size a) where inherit = OtherSize Clay.Common.inheritValue
 instance None (Size a) where none = OtherSize Clay.Common.noneValue
 instance Other (Size a) where other a = OtherSize a
 
@@ -268,7 +269,7 @@ data Grad
 data Turn
 
 newtype Angle a = Angle Value
-  deriving (Val, Auto, Inherit, Other)
+  deriving (Val, Auto, GlobalValues, Other)
 
 -- | Angle in degrees.
 deg :: Double -> Angle Deg

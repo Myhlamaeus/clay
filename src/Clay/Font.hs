@@ -125,7 +125,7 @@ color = key "color"
 -- <http://www.w3.org/TR/css3-fonts/#generic-font-families>.
 
 newtype GenericFontFamily = GenericFontFamily Value
-  deriving (Val, Inherit, Auto, Other)
+  deriving (Val, GlobalValues, Auto, Other)
 
 sansSerif, serif, monospace, cursive, fantasy :: GenericFontFamily
 
@@ -146,7 +146,7 @@ fontFamily a b = key "font-family" $
 -------------------------------------------------------------------------------
 
 newtype FontSize = FontSize Value
-  deriving (Val, Inherit, Auto, Other)
+  deriving (Val, GlobalValues, Auto, Other)
 
 xxSmall, xSmall, small, medium, large, xLarge, xxLarge, smaller, larger :: FontSize
 
@@ -169,7 +169,7 @@ fontSizeCustom = key "font-size"
 -------------------------------------------------------------------------------
 
 newtype FontStyle = FontStyle Value
-  deriving (Val, Inherit, Normal, Other)
+  deriving (Val, GlobalValues, Normal, Other)
 
 italic, oblique :: FontStyle
 
@@ -182,7 +182,7 @@ fontStyle = key "font-style"
 -------------------------------------------------------------------------------
 
 newtype FontVariant = FontVariant Value
-  deriving (Val, Inherit, Normal, Other)
+  deriving (Val, GlobalValues, Normal, Other)
 
 smallCaps :: FontVariant
 smallCaps = FontVariant "small-caps"
@@ -193,7 +193,7 @@ fontVariant = key "font-variant"
 -------------------------------------------------------------------------------
 
 newtype FontWeight = FontWeight Value
-  deriving (Val, Inherit, Normal, Other)
+  deriving (Val, GlobalValues, Normal, Other)
 
 bold, bolder, lighter :: FontWeight
 
@@ -225,4 +225,3 @@ statusBar    = NamedFont "status-bar"
 
 lineHeight :: Size a -> Css
 lineHeight = key "line-height"
-

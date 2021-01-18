@@ -20,7 +20,7 @@ import Clay.Property
 -------------------------------------------------------------------------------
 
 newtype Time = Time Value
-  deriving (Val, Auto, Normal, Inherit, None, Other)
+  deriving (Val, Auto, Normal, GlobalValues, None, Other)
 
 -- | Time in seconds.
 
@@ -43,4 +43,3 @@ instance Num Time where
 instance Fractional Time where
   fromRational = sec . fromRational
   recip  = error  "recip not implemented for Time"
-

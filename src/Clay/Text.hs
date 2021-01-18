@@ -73,14 +73,14 @@ module Clay.Text
 , wordBreak
 , breakAll
 , keepAll
-  
+
 -- * Overflow-wrap (and Word-wrap).
 
 , OverflowWrap
 , overflowWrap
 , wordWrap
 , breakWord
-  
+
 -- * Content.
 
 , Content
@@ -117,7 +117,7 @@ wordSpacing = key "word-spacing"
 -------------------------------------------------------------------------------
 
 newtype TextRendering = TextRendering Value
-  deriving (Val, Auto, Inherit, Other)
+  deriving (Val, Auto, GlobalValues, Other)
 
 optimizeSpeed, optimizeLegibility, geometricPrecision :: TextRendering
 
@@ -151,7 +151,7 @@ textShadow x y w c = key "text-shadow" (x ! y ! w ! c)
 -- > <length-percentage> = <length> | <percentage>
 
 newtype TextIndent = TextIndent Value
-  deriving (Val, Inherit, Initial, Unset, Other)
+  deriving (Val, GlobalValues, Other)
 
 -- | An internal function that ensures each-line and hanging are processed
 -- correctly.
@@ -176,7 +176,7 @@ textIndent = key "text-indent"
 -------------------------------------------------------------------------------
 
 newtype TextDirection = TextDirection Value
-  deriving (Val, Normal, Inherit, Other)
+  deriving (Val, Normal, GlobalValues, Other)
 
 ltr :: TextDirection
 ltr = TextDirection "ltr"
@@ -190,7 +190,7 @@ direction = key "direction"
 -------------------------------------------------------------------------------
 
 newtype TextAlign = TextAlign Value
-  deriving (Val, Normal, Inherit, Other, Center)
+  deriving (Val, Normal, GlobalValues, Other, Center)
 
 justify, matchParent, start, end :: TextAlign
 
@@ -214,7 +214,7 @@ textAlignLast = key "text-align-last"
 -------------------------------------------------------------------------------
 
 newtype WhiteSpace = WhiteSpace Value
-  deriving (Val, Normal, Inherit, Other)
+  deriving (Val, Normal, GlobalValues, Other)
 
 whiteSpace :: WhiteSpace -> Css
 whiteSpace = key "white-space"
@@ -229,7 +229,7 @@ preLine = WhiteSpace "pre-line"
 -------------------------------------------------------------------------------
 
 newtype TextDecoration = TextDecoration Value
-  deriving (Val, None, Inherit, Other)
+  deriving (Val, None, GlobalValues, Other)
 
 underline, overline, lineThrough, blink :: TextDecoration
 
@@ -253,7 +253,7 @@ textDecorationStyle = key "text-decoration-style"
 -------------------------------------------------------------------------------
 
 newtype TextTransform = TextTransform Value
-  deriving (Val, None, Inherit)
+  deriving (Val, None, GlobalValues)
 
 capitalize, uppercase, lowercase, fullWidth :: TextTransform
 
@@ -268,7 +268,7 @@ textTransform = key "text-transform"
 -------------------------------------------------------------------------------
 
 newtype WordBreak = WordBreak Value
-  deriving (Val, Inherit, Initial, Unset, Normal)
+  deriving (Val, GlobalValues, Normal)
 
 breakAll, keepAll :: WordBreak
 
@@ -282,7 +282,7 @@ wordBreak = key "word-break"
 -------------------------------------------------------------------------------
 
 newtype OverflowWrap = OverflowWrap Value
-  deriving (Val, Inherit, Initial, Unset, Normal)
+  deriving (Val, GlobalValues, Normal)
 
 breakWord :: OverflowWrap
 
@@ -296,7 +296,7 @@ overflowWrap = key "overflow-wrap"
 -------------------------------------------------------------------------------
 
 newtype TextOverflow = TextOverflow Value
-  deriving (Val, None, Inherit, Initial)
+  deriving (Val, None, GlobalValues)
 
 overflowClip, overflowEllipsis :: TextOverflow
 
@@ -309,7 +309,7 @@ textOverflow = key "text-overflow"
 -------------------------------------------------------------------------------
 
 newtype Content = Content Value
-  deriving (Val, None, Normal, Inherit, Initial)
+  deriving (Val, None, Normal, GlobalValues)
 
 attrContent :: Text -> Content
 attrContent a = Content ("attr(" <> value a <> ")")

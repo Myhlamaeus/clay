@@ -133,7 +133,7 @@ posInset = keyDirectional "inset"
 -------------------------------------------------------------------------------
 
 newtype Stroke = Stroke Value
-  deriving (Show, Eq, Val, Other, Inherit, Auto, None)
+  deriving (Show, Eq, Val, Other, GlobalValues, Auto, None)
 
 solid, dotted, dashed, double, wavy, groove, ridge, inset, outset :: Stroke
 
@@ -153,6 +153,7 @@ data Border a
   = Border (Size a) Stroke Color
   | BorderOther Value
   deriving (Show)
+  deriving (GlobalValues) via (GlobalValuesViaOther (Border a))
 
 instance Val (Border a) where
   value (Border w s c) = value (w ! s ! c)
@@ -160,9 +161,6 @@ instance Val (Border a) where
 
 instance Other (Border a) where other = BorderOther
 instance None (Border a) where none = other none
-instance Inherit (Border a) where inherit = other inherit
-instance Initial (Border a) where initial = other initial
-instance Unset (Border a) where unset = other unset
 
 -- | Specify that border width, style, and color should be set.
 -- >>> render $ border $ blockStart' $ mkBorder (px 5) dashed yellow

@@ -146,7 +146,7 @@ borderBottomRightRadius a b = key "border-bottom-right-radius" (a ! b)
 -------------------------------------------------------------------------------
 
 {- newtype Collapse = Collapse Value
-  deriving (Val, Initial, Inherit, Other)
+  deriving (Val, GlobalValues, Other)
 
 collapseCollapse, collapseSeparate :: Collapse
 

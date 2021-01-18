@@ -36,7 +36,7 @@ import Clay.Size
 -------------------------------------------------------------------------------
 
 newtype Filter = Filter Value
-  deriving (Val, None, Inherit)
+  deriving (Val, None, GlobalValues)
 
 filter :: Filter -> Css
 filter = prefixed (browsers <> "filter")
@@ -78,4 +78,3 @@ saturate i = Filter ("saturate(" <> value i <> ")")
 
 sepia :: Size Percentage -> Filter
 sepia i = Filter ("sepia(" <> value i <> ")")
-
