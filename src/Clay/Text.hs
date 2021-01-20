@@ -108,10 +108,10 @@ import Clay.Size
 
 -------------------------------------------------------------------------------
 
-letterSpacing :: Size a -> Css
+letterSpacing :: Style m => Size a -> m ()
 letterSpacing = key "letter-spacing"
 
-wordSpacing :: Size a -> Css
+wordSpacing :: Style m => Size a -> m ()
 wordSpacing = key "word-spacing"
 
 -------------------------------------------------------------------------------
@@ -125,12 +125,12 @@ optimizeSpeed      = TextRendering "optimizeSpeed"
 optimizeLegibility = TextRendering "optimizeLegibility"
 geometricPrecision = TextRendering "geometricPrecision"
 
-textRendering :: TextRendering -> Css
+textRendering :: Style m => TextRendering -> m ()
 textRendering = key "text-rendering"
 
 -------------------------------------------------------------------------------
 
-textShadow :: Size a -> Size a -> Size a -> Color -> Css
+textShadow :: Style m => Size a -> Size a -> Size a -> Color -> m ()
 textShadow x y w c = key "text-shadow" (x ! y ! w ! c)
 
 -------------------------------------------------------------------------------
@@ -170,7 +170,7 @@ hanging  = tagTextIndent "hanging"
 indent :: Size a -> TextIndent
 indent = TextIndent . value
 
-textIndent :: TextIndent -> Css
+textIndent :: Style m => TextIndent -> m ()
 textIndent = key "text-indent"
 
 -------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ ltr = TextDirection "ltr"
 rtl :: TextDirection
 rtl = TextDirection "rtl"
 
-direction :: TextDirection -> Css
+direction :: Style m => TextDirection -> m ()
 direction = key "direction"
 
 -------------------------------------------------------------------------------
@@ -205,10 +205,10 @@ alignSide = TextAlign . value
 alignString :: Char -> TextAlign
 alignString = TextAlign . value . Literal . fromString . return
 
-textAlign :: TextAlign -> Css
+textAlign :: Style m => TextAlign -> m ()
 textAlign = key "text-align"
 
-textAlignLast :: TextAlign -> Css
+textAlignLast :: Style m => TextAlign -> m ()
 textAlignLast = key "text-align-last"
 
 -------------------------------------------------------------------------------
@@ -216,7 +216,7 @@ textAlignLast = key "text-align-last"
 newtype WhiteSpace = WhiteSpace Value
   deriving (Val, Normal, GlobalValues, Other)
 
-whiteSpace :: WhiteSpace -> Css
+whiteSpace :: Style m => WhiteSpace -> m ()
 whiteSpace = key "white-space"
 
 pre, nowrap, preWrap, preLine :: WhiteSpace
@@ -238,16 +238,16 @@ overline    = TextDecoration "overline"
 lineThrough = TextDecoration "line-through"
 blink       = TextDecoration "blink"
 
-textDecorationLine :: TextDecoration -> Css
+textDecorationLine :: Style m => TextDecoration -> m ()
 textDecorationLine = key "text-decoration-line"
 
-textDecorationColor :: Color -> Css
+textDecorationColor :: Style m => Color -> m ()
 textDecorationColor = key "text-decoration-color"
 
-textDecoration :: TextDecoration -> Css
+textDecoration :: Style m => TextDecoration -> m ()
 textDecoration = key "text-decoration"
 
-textDecorationStyle :: Stroke -> Css
+textDecorationStyle :: Style m => Stroke -> m ()
 textDecorationStyle = key "text-decoration-style"
 
 -------------------------------------------------------------------------------
@@ -262,7 +262,7 @@ uppercase  = TextTransform "uppercase"
 lowercase  = TextTransform "lowercase"
 fullWidth  = TextTransform "full-width"
 
-textTransform :: TextTransform -> Css
+textTransform :: Style m => TextTransform -> m ()
 textTransform = key "text-transform"
 
 -------------------------------------------------------------------------------
@@ -275,7 +275,7 @@ breakAll, keepAll :: WordBreak
 breakAll = WordBreak "break-all"
 keepAll  = WordBreak "keep-all"
 
-wordBreak :: WordBreak -> Css
+wordBreak :: Style m => WordBreak -> m ()
 
 wordBreak = key "word-break"
 
@@ -288,7 +288,7 @@ breakWord :: OverflowWrap
 
 breakWord = OverflowWrap "break-word"
 
-overflowWrap, wordWrap :: OverflowWrap -> Css
+overflowWrap, wordWrap :: Style m => OverflowWrap -> m ()
 
 wordWrap     = key "word-wrap"
 overflowWrap = key "overflow-wrap"
@@ -303,7 +303,7 @@ overflowClip, overflowEllipsis :: TextOverflow
 overflowClip = TextOverflow "clip"
 overflowEllipsis = TextOverflow "ellipsis"
 
-textOverflow :: TextOverflow -> Css
+textOverflow :: Style m => TextOverflow -> m ()
 textOverflow = key "text-overflow"
 
 -------------------------------------------------------------------------------
@@ -330,10 +330,10 @@ closeQuote   = Content "close-quote"
 noOpenQuote  = Content "no-open-quote"
 noCloseQuote = Content "no-close-quote"
 
-content :: Content -> Css
+content :: Style m => Content -> m ()
 content = key "content"
 
-contents :: [Content] -> Css
+contents :: Style m => [Content] -> m ()
 contents cs = key "content" (noCommas cs)
 
 -- TODO: counters

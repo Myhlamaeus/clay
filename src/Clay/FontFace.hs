@@ -7,7 +7,7 @@ module Clay.FontFace
 
 import Clay.Common (call)
 import Clay.Property (Prefixed (Plain), Value(Value), Val (value), quote)
-import Clay.Stylesheet (Css, key)
+import Clay.Stylesheet (Style, key)
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -49,5 +49,5 @@ instance Val FontFaceSrc where
 
 -------------------------------------------------------------------------------
 
-fontFaceSrc :: [FontFaceSrc] -> Css
+fontFaceSrc :: Style m => [FontFaceSrc] -> m ()
 fontFaceSrc = key "src"

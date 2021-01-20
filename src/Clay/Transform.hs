@@ -35,7 +35,7 @@ module Clay.Transform
 
 , perspective
 , matrix
-, matrix3d 
+, matrix3d
 )
 where
 
@@ -49,10 +49,10 @@ import Clay.Common
 newtype Transformation = Transformation Value
   deriving (Val, None)
 
-transform :: Transformation -> Css
+transform :: Style m => Transformation -> m ()
 transform = prefixed (browsers <> "transform")
 
-transforms :: [Transformation] -> Css
+transforms :: Style m => [Transformation] -> m ()
 transforms xs = prefixed (browsers <> "transform") (noCommas xs)
 
 -------------------------------------------------------------------------------
@@ -131,4 +131,3 @@ matrix3d w0 x0 y0 z0
        , w2, x2, y2, z2
        , w3, x3, y3, z3
        ] <> ")")
-

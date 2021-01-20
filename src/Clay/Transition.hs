@@ -43,29 +43,29 @@ import Clay.Property
 import Clay.Stylesheet
 import Clay.Time
 
-transition :: Text -> Time -> TimingFunction -> Time -> Css
+transition :: Style m => Text -> Time -> TimingFunction -> Time -> m ()
 transition p d f e = prefixed (browsers <> "transition") (p ! d ! f ! e)
 
-transitions :: [(Text, Time, TimingFunction, Time)] -> Css
+transitions :: Style m => [(Text, Time, TimingFunction, Time)] -> m ()
 transitions [] = key "transition" (none :: Value)
 transitions x = prefixed (browsers <> "transition")
                 $ map (\(p, d, f, e) -> value (p ! d ! f ! e)) x
 
 -------------------------------------------------------------------------------
 
-transitionProperty :: Text -> Css
+transitionProperty :: Style m => Text -> m ()
 transitionProperty = key "transition-property"
 
-transitionProperties :: [Text] -> Css
+transitionProperties :: Style m => [Text] -> m ()
 transitionProperties [] = key "transition-property" (none :: Value)
 transitionProperties x = key "transition-property" x
 
 -------------------------------------------------------------------------------
 
-transitionDuration :: Time -> Css
+transitionDuration :: Style m => Time -> m ()
 transitionDuration = key "transition-duration"
 
-transitionDurations :: [Time] -> Css          
+transitionDurations :: Style m => [Time] -> m ()
 transitionDurations [] = key "transition-duration" (none :: Value)
 transitionDurations x = key "transition-duration" x
 
@@ -95,18 +95,17 @@ stepsStop  s = other ("steps(" <> value s <> ", end)")
 cubicBezier :: Double -> Double -> Double -> Double -> TimingFunction
 cubicBezier a b c d = other ("cubic-bezier(" <> value (a ! b ! c ! d) <> ")")
 
-transitionTimingFunction :: TimingFunction -> Css
+transitionTimingFunction :: Style m => TimingFunction -> m ()
 transitionTimingFunction = key "transition-timing-function"
 
-transitionTimingFunctions :: [TimingFunction] -> Css
+transitionTimingFunctions :: Style m => [TimingFunction] -> m ()
 transitionTimingFunctions [] = key "transition-timing-function" (none :: Value)
 transitionTimingFunctions x = key "transition-timing-function" x
 
 -------------------------------------------------------------------------------
 
-transitionDelay :: Time -> Css
+transitionDelay :: Style m => Time -> m ()
 transitionDelay = key "transition-delay"
 
-transitionDelays :: [Time] -> Css
+transitionDelays :: Style m => [Time] -> m ()
 transitionDelays = key "transition-delay"
-

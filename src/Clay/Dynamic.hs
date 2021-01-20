@@ -43,7 +43,7 @@ import Data.Monoid hiding (All)
 
 -- | Enabling user interface elements.
 
-userInput :: UserInput -> Css
+userInput :: Style m => UserInput -> m ()
 userInput = prefixed (browsers <> "user-input")
 
 -- | Selection mode.
@@ -63,7 +63,7 @@ inputDisabled = UserInput "disabled"
 
 -- | Modifiability of an element.
 
-userModify :: UserModify -> Css
+userModify :: Style m => UserModify -> m ()
 userModify = prefixed (browsers <> "user-modify")
 
 -- | Selection mode.
@@ -84,7 +84,7 @@ writeOnly = UserModify "write-only"
 
 -- | Content selection granularity.
 
-userSelect :: UserSelect -> Css
+userSelect :: Style m => UserSelect -> m ()
 userSelect = prefixed (browsers <> "user-select")
 
 -- | Selection mode.
@@ -106,7 +106,7 @@ selectElements = UserSelect "elements"
 
 -- | Content focusing granularity.
 
-userFocus :: UserFocus -> Css
+userFocus :: Style m => UserFocus -> m ()
 userFocus = prefixed (browsers <> "user-focus")
 
 -- | Focus behaviour.

@@ -41,7 +41,7 @@ import Clay.Display
 import qualified Clay.BoxModel as BM
 import Clay.BoxModel (Stroke, solid, dotted, dashed, double, wavy, groove, ridge, inset, outset, mkBorder)
 
-border, borderTop, borderLeft, borderBottom, borderRight :: Size LengthUnit -> Stroke -> Color -> Css
+border, borderTop, borderLeft, borderBottom, borderRight :: Style m => Size LengthUnit -> Stroke -> Color -> m ()
 
 border        w s c = BM.border $ all' $ mkBorder w s c
 borderTop     w s c = BM.border $ blockStart $ mkBorder w s c
@@ -49,10 +49,10 @@ borderLeft    w s c = BM.border $ inlineStart $ mkBorder w s c
 borderBottom  w s c = BM.border $ blockEnd $ mkBorder w s c
 borderRight   w s c = BM.border $ inlineEnd $ mkBorder w s c
 
-borderColor4 :: Color -> Color -> Color -> Color -> Css
+borderColor4 :: Style m => Color -> Color -> Color -> Color -> m ()
 borderColor4 bs ie be is = BM.borderColor $ eachDir bs is be ie
 
-borderColor, borderLeftColor, borderRightColor, borderTopColor, borderBottomColor :: Color -> Css
+borderColor, borderLeftColor, borderRightColor, borderTopColor, borderBottomColor :: Style m => Color -> m ()
 
 borderColor       = BM.borderColor . all'
 borderTopColor    = BM.borderColor . blockStart
@@ -60,10 +60,10 @@ borderLeftColor   = BM.borderColor . inlineStart
 borderBottomColor = BM.borderColor . blockEnd
 borderRightColor  = BM.borderColor . inlineEnd
 
-borderStyle4 :: Stroke -> Stroke -> Stroke -> Stroke -> Css
+borderStyle4 :: Style m => Stroke -> Stroke -> Stroke -> Stroke -> m ()
 borderStyle4 bs ie be is = BM.borderStyle $ eachDir bs is be ie
 
-borderStyle, borderLeftStyle, borderRightStyle, borderTopStyle, borderBottomStyle :: Stroke -> Css
+borderStyle, borderLeftStyle, borderRightStyle, borderTopStyle, borderBottomStyle :: Style m => Stroke -> m ()
 
 borderStyle       = BM.borderStyle . all'
 borderTopStyle    = BM.borderStyle . blockStart
@@ -71,10 +71,10 @@ borderLeftStyle   = BM.borderStyle . inlineStart
 borderBottomStyle = BM.borderStyle . blockEnd
 borderRightStyle  = BM.borderStyle . inlineEnd
 
-borderWidth4 :: Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Css
+borderWidth4 :: Style m => Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> m ()
 borderWidth4 bs ie be is = BM.borderWidth $ eachDir bs is be ie
 
-borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth :: Size LengthUnit -> Css
+borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth :: Style m => Size LengthUnit -> m ()
 
 borderWidth       = BM.borderWidth . all'
 borderTopWidth    = BM.borderWidth . blockStart
@@ -84,7 +84,7 @@ borderRightWidth  = BM.borderWidth . inlineEnd
 
 -------------------------------------------------------------------------------
 
-outline, outlineTop, outlineLeft, outlineBottom, outlineRight :: Stroke -> Size LengthUnit -> Color -> Css
+outline, outlineTop, outlineLeft, outlineBottom, outlineRight :: Style m => Stroke -> Size LengthUnit -> Color -> m ()
 
 outline        s w c = BM.outline $ all' $ mkBorder w s c
 outlineTop     s w c = BM.outline $ blockStart $ mkBorder w s c
@@ -92,10 +92,10 @@ outlineLeft    s w c = BM.outline $ inlineStart $ mkBorder w s c
 outlineBottom  s w c = BM.outline $ blockEnd $ mkBorder w s c
 outlineRight   s w c = BM.outline $ inlineEnd $ mkBorder w s c
 
-outlineColor4 :: Color -> Color -> Color -> Color -> Css
+outlineColor4 :: Style m => Color -> Color -> Color -> Color -> m ()
 outlineColor4 bs ie be is = BM.outlineColor $ eachDir bs is be ie
 
-outlineColor, outlineLeftColor, outlineRightColor, outlineTopColor, outlineBottomColor :: Color -> Css
+outlineColor, outlineLeftColor, outlineRightColor, outlineTopColor, outlineBottomColor :: Style m => Color -> m ()
 
 outlineColor       = BM.outlineColor . all'
 outlineTopColor    = BM.outlineColor . blockStart
@@ -103,10 +103,10 @@ outlineLeftColor   = BM.outlineColor . inlineStart
 outlineBottomColor = BM.outlineColor . blockEnd
 outlineRightColor  = BM.outlineColor . inlineEnd
 
-outlineStyle4 :: Stroke -> Stroke -> Stroke -> Stroke -> Css
+outlineStyle4 :: Style m => Stroke -> Stroke -> Stroke -> Stroke -> m ()
 outlineStyle4 bs ie be is = BM.outlineStyle $ eachDir bs is be ie
 
-outlineStyle, outlineLeftStyle, outlineRightStyle, outlineTopStyle, outlineBottomStyle :: Stroke -> Css
+outlineStyle, outlineLeftStyle, outlineRightStyle, outlineTopStyle, outlineBottomStyle :: Style m => Stroke -> m ()
 
 outlineStyle       = BM.outlineStyle . all'
 outlineTopStyle    = BM.outlineStyle . blockStart
@@ -114,10 +114,10 @@ outlineLeftStyle   = BM.outlineStyle . inlineStart
 outlineBottomStyle = BM.outlineStyle . blockEnd
 outlineRightStyle  = BM.outlineStyle . inlineEnd
 
-outlineWidth4 :: Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Css
+outlineWidth4 :: Style m => Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> m ()
 outlineWidth4 bs ie be is = BM.outlineWidth $ eachDir bs is be ie
 
-outlineWidth, outlineLeftWidth, outlineRightWidth, outlineTopWidth, outlineBottomWidth :: Size LengthUnit -> Css
+outlineWidth, outlineLeftWidth, outlineRightWidth, outlineTopWidth, outlineBottomWidth :: Style m => Size LengthUnit -> m ()
 
 outlineWidth       = BM.outlineWidth . all'
 outlineTopWidth    = BM.outlineWidth . blockStart
@@ -125,18 +125,18 @@ outlineLeftWidth   = BM.outlineWidth . inlineStart
 outlineBottomWidth = BM.outlineWidth . blockEnd
 outlineRightWidth  = BM.outlineWidth . inlineEnd
 
-outlineOffset :: Size LengthUnit -> Css
+outlineOffset :: Style m => Size LengthUnit -> m ()
 outlineOffset = key "outline-offset"
 
 -------------------------------------------------------------------------------
 
 -- @TODO borderRadius is using a Directional rotated by 1/8; should we use the same structure?
 
-borderRadius :: Size a -> Size a -> Size a -> Size a -> Css
+borderRadius :: Style m => Size a -> Size a -> Size a -> Size a -> m ()
 borderRadius a b c d = key "border-radius" (a ! b ! c ! d)
 
 borderTopLeftRadius, borderTopRightRadius,
-  borderBottomLeftRadius, borderBottomRightRadius :: Size a -> Size a -> Css
+  borderBottomLeftRadius, borderBottomRightRadius :: Style m => Size a -> Size a -> m ()
 
 borderTopLeftRadius     a b = key "border-top-left-radius"     (a ! b)
 borderTopRightRadius    a b = key "border-top-right-radius"    (a ! b)
@@ -157,11 +157,11 @@ collapseSeparate  = Collapse "separate" -}
     Preferred just to add separate to Visibility
     Because (borderCollapse collapseCollapse) sounds bad -}
 
-borderCollapse :: Visibility -> Css
+borderCollapse :: Style m => Visibility -> m ()
 borderCollapse = key "border-collapse"
 
-borderSpacing :: Size a -> Css
+borderSpacing :: Style m => Size a -> m ()
 borderSpacing = key "border-spacing"
 
-borderSpacing2 :: Size a -> Size a -> Css
+borderSpacing2 :: Style m => Size a -> Size a -> m ()
 borderSpacing2 a b = key "border-spacing" (a ! b)

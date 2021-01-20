@@ -28,7 +28,7 @@ newtype AlignContentValue = AlignContentValue Value
   deriving (Val, Other, GlobalValues, FlexStart, FlexEnd
           , Center, SpaceBetween, SpaceAround, Stretch)
 
-alignContent :: AlignContentValue -> Css
+alignContent :: Style m => AlignContentValue -> m ()
 alignContent = key "align-content"
 
 -------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ newtype AlignItemsValue = AlignItemValue Value
   deriving (Val, Other, GlobalValues, Baseline
           , Center, FlexEnd, FlexStart, Stretch)
 
-alignItems :: AlignItemsValue -> Css
+alignItems :: Style m => AlignItemsValue -> m ()
 alignItems = key "align-items"
 
 -------------------------------------------------------------------------------
@@ -46,19 +46,19 @@ newtype AlignSelfValue = AlignSelfValue Value
   deriving (Val, Other, GlobalValues, Auto, Baseline
           , Center, FlexEnd, FlexStart, Stretch)
 
-alignSelf :: AlignSelfValue -> Css
+alignSelf :: Style m => AlignSelfValue -> m ()
 alignSelf = key "align-self"
 
 -------------------------------------------------------------------------------
 
-flex :: Int -> Int -> Size b -> Css
+flex :: Style m => Int -> Int -> Size b -> m ()
 flex g s b = key "flex" (gs ! ss ! value b)
   where gs = fromString (show g) :: Value
         ss = fromString (show s) :: Value
 
 -------------------------------------------------------------------------------
 
-flexBasis :: Size a -> Css
+flexBasis :: Style m => Size a -> m ()
 flexBasis = key "flex-basis"
 
 -------------------------------------------------------------------------------
@@ -73,20 +73,20 @@ rowReverse    = FlexDirection "row-reverse"
 column        = FlexDirection "column"
 columnReverse = FlexDirection "column-reverse"
 
-flexDirection :: FlexDirection -> Css
+flexDirection :: Style m => FlexDirection -> m ()
 flexDirection = key "flex-direction"
 
 -------------------------------------------------------------------------------
 
-flexFlow :: FlexDirection -> FlexWrap -> Css
+flexFlow :: Style m => FlexDirection -> FlexWrap -> m ()
 flexFlow d w = key "flex-flow" (d ! w)
 
 -------------------------------------------------------------------------------
 
-flexGrow :: Int -> Css
+flexGrow :: Style m => Int -> m ()
 flexGrow i = key "flex-grow" (fromString (show i) :: Value)
 
-flexShrink :: Int  -> Css
+flexShrink :: Style m => Int  -> m ()
 flexShrink i = key "flex-shrink" (fromString (show i) :: Value)
 
 -------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ nowrap = FlexWrap "nowrap"
 wrap = FlexWrap "wrap"
 wrapReverse = FlexWrap "wrap-reverse"
 
-flexWrap :: FlexWrap -> Css
+flexWrap :: Style m => FlexWrap -> m ()
 flexWrap = key "flex-wrap"
 
 -------------------------------------------------------------------------------
@@ -109,10 +109,10 @@ newtype JustifyContentValue = JustifyContentValue Value
   deriving (Val, Other, GlobalValues, Center, FlexEnd
           , FlexStart, SpaceAround, SpaceBetween)
 
-justifyContent :: JustifyContentValue -> Css
+justifyContent :: Style m => JustifyContentValue -> m ()
 justifyContent = key "justify-content"
 
 -------------------------------------------------------------------------------
 
-order :: Int -> Css
+order :: Style m => Int -> m ()
 order i = key "order" (fromString (show i) :: Value)

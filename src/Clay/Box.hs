@@ -42,7 +42,7 @@ contentBox = BoxType "content-box"
 
 -------------------------------------------------------------------------------
 
-boxSizing :: BoxType -> Css
+boxSizing :: Style m => BoxType -> m ()
 boxSizing = prefixed (browsers <> "box-sizing")
 
 -------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ newtype BoxShadow = BoxShadow Value
 -- This is recommended for supplying multiple 'BoxShadow' values.
 --
 -- > boxShadow [shadowWithBlur (em 2) (em 1), bsInset . bsColor red $ shadow (px 1) (px 2)]
-boxShadow :: NonEmpty BoxShadow -> Css
+boxShadow :: Style m => NonEmpty BoxShadow -> m ()
 boxShadow = prefixed (browsers <> "box-shadow") . value
 
 shadow
@@ -141,7 +141,7 @@ infixr 9 `bsColor`
 
 -- | This is the drop-in replacement for the old 'boxShadow' function (< 0.13).
 -- It is possible to continue for now
-boxShadow' :: Size a -> Size a -> Size a -> Color -> Css
+boxShadow' :: Style m => Size a -> Size a -> Size a -> Color -> m ()
 boxShadow' x y w c = prefixed (browsers <> "box-shadow") (x ! y ! w ! c)
 {-# DEPRECATED boxShadow' "This function is only present for compatibility purposes and will be removed." #-}
 
@@ -150,7 +150,7 @@ boxShadow' x y w c = prefixed (browsers <> "box-shadow") (x ! y ! w ! c)
 -- > boxShadowWithSpread x y rb rs c
 --
 -- > boxShadow [c `bsColor` shadowWithSpread x y rb rs]
-boxShadowWithSpread :: Size a -> Size a -> Size a -> Size a -> Color -> Css
+boxShadowWithSpread :: Style m => Size a -> Size a -> Size a -> Size a -> Color -> m ()
 boxShadowWithSpread x y blurRadius spreadRadius color =
     prefixed (browsers <> "box-shadow") (x ! y ! blurRadius ! spreadRadius ! color)
 {-# DEPRECATED boxShadowWithSpread "This function has been replaced with shadowWithSpread and bsColor and will be removed." #-}
@@ -163,7 +163,7 @@ boxShadowWithSpread x y blurRadius spreadRadius color =
 -- >   [ c1 `bsColor` shadowWithBlur x1 y1 rb1
 -- >   , c2 `bsColor` shadowWithBlur x2 y2 rb2
 -- >   ]
-boxShadows :: [(Size a, Size a, Size a, Color)] -> Css
+boxShadows :: Style m => [(Size a, Size a, Size a, Color)] -> m ()
 boxShadows = prefixed (browsers <> "box-shadow") . map (\(a, b, c, d) -> a ! b ! c ! d)
 {-# DEPRECATED boxShadows "This function is replaced with boxShadow and will be removed." #-}
 
@@ -172,6 +172,6 @@ boxShadows = prefixed (browsers <> "box-shadow") . map (\(a, b, c, d) -> a ! b !
 -- > insetBoxShadow s x y rb c
 --
 -- > boxShadow [bsInset $ c `bsColor` shadowWithBlur x y rb]
-insetBoxShadow :: Stroke -> Size a -> Size a -> Size a -> Color -> Css
+insetBoxShadow :: Style m => Stroke -> Size a -> Size a -> Size a -> Color -> m ()
 insetBoxShadow x y w c z = prefixed (browsers <> "box-shadow") (x ! y ! w ! c ! z)
 {-# DEPRECATED insetBoxShadow "This function has been replaced with shadowWithSpread, bsInset and bsColor and will be removed." #-}

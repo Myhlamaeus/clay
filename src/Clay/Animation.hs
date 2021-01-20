@@ -73,18 +73,20 @@ import Clay.Transition
 
 
 animation
-  :: AnimationName
+  :: Style m
+  => AnimationName
   -> Time
   -> TimingFunction
   -> Time
   -> IterationCount
   -> AnimationDirection
   -> FillMode
-  -> Css
+  -> m ()
 animation p de f du i di fm = prefixed (browsers <> "animation") (p ! de ! f ! du ! i ! di ! fm)
 
 animations
-  :: [ ( AnimationName
+  :: Style m
+  => [ ( AnimationName
        , Time
        , TimingFunction
        , Time
@@ -92,16 +94,16 @@ animations
        , AnimationDirection
        , FillMode
        )
-     ] -> Css
+     ] -> m ()
 animations = prefixed (browsers <> "animation")
             . map (\(p, de, f, du, i, di, fm) -> value (p ! de ! f ! du ! i ! di ! fm))
 
 -------------------------------------------------------------------------------
 
-animationDelay :: Time -> Css
+animationDelay :: Style m => Time -> m ()
 animationDelay = prefixed (browsers <> "animation-delay")
 
-animationDelays :: [Time] -> Css
+animationDelays :: Style m => [Time] -> m ()
 animationDelays = prefixed (browsers <> "animation-delay")
 
 -------------------------------------------------------------------------------
@@ -109,10 +111,10 @@ animationDelays = prefixed (browsers <> "animation-delay")
 newtype AnimationDirection = AnimationDirection Value
   deriving (Val, Other, Normal)
 
-animationDirection :: AnimationDirection -> Css
+animationDirection :: Style m => AnimationDirection -> m ()
 animationDirection = prefixed (browsers <> "animation-direction")
 
-animationDirections :: [AnimationDirection] -> Css
+animationDirections :: Style m => [AnimationDirection] -> m ()
 animationDirections = prefixed (browsers <> "animation-direction")
 
 alternate, reverse, alternateReverse :: AnimationDirection
@@ -122,10 +124,10 @@ alternateReverse = AnimationDirection "alternate-reverse"
 
 -------------------------------------------------------------------------------
 
-animationDuration :: Time -> Css
+animationDuration :: Style m => Time -> m ()
 animationDuration = prefixed (browsers <> "animation-duration")
 
-animationDurations :: [Time] -> Css
+animationDurations :: Style m => [Time] -> m ()
 animationDurations = prefixed (browsers <> "animation-duration")
 
 -------------------------------------------------------------------------------
@@ -133,10 +135,10 @@ animationDurations = prefixed (browsers <> "animation-duration")
 newtype IterationCount = IterationCount Value
   deriving (Val, Other, Normal)
 
-animationIterationCount :: IterationCount -> Css
+animationIterationCount :: Style m => IterationCount -> m ()
 animationIterationCount = prefixed (browsers <> "animation-iteration-count")
 
-animationIterationCounts :: [IterationCount] -> Css
+animationIterationCounts :: Style m => [IterationCount] -> m ()
 animationIterationCounts = prefixed (browsers <> "animation-iteration-count")
 
 infinite :: IterationCount
@@ -150,7 +152,7 @@ iterationCount = IterationCount . value
 newtype AnimationName = AnimationName Value
   deriving (Val, Other, IsString, GlobalValues)
 
-animationName :: AnimationName -> Css
+animationName :: Style m => AnimationName -> m ()
 animationName = prefixed (browsers <> "animation-name")
 
 -------------------------------------------------------------------------------
@@ -158,7 +160,7 @@ animationName = prefixed (browsers <> "animation-name")
 newtype PlayState = PlayState Value
   deriving (Val, Other)
 
-animationPlayState :: PlayState -> Css
+animationPlayState :: Style m => PlayState -> m ()
 animationPlayState = prefixed (browsers <> "animation-play-state")
 
 running, paused :: PlayState
@@ -170,7 +172,7 @@ paused  = PlayState "paused"
 newtype FillMode = FillMode Value
   deriving (Val, Other, None)
 
-animationFillMode :: FillMode -> Css
+animationFillMode :: Style m => FillMode -> m ()
 animationFillMode = prefixed (browsers <> "animation-fill-mode")
 
 forwards, backwards :: FillMode
@@ -179,5 +181,5 @@ backwards = FillMode "backwards"
 
 -------------------------------------------------------------------------------
 
-animationTimingFunction :: TimingFunction -> Css
+animationTimingFunction :: Style m => TimingFunction -> m ()
 animationTimingFunction = prefixed (browsers <> "animation-timing-function")

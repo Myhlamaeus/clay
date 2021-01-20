@@ -38,10 +38,10 @@ import Clay.Size
 newtype Filter = Filter Value
   deriving (Val, None, GlobalValues)
 
-filter :: Filter -> Css
+filter :: Style m => Filter -> m ()
 filter = prefixed (browsers <> "filter")
 
-filters :: [Filter] -> Css
+filters :: Style m => [Filter] -> m ()
 filters x = prefixed (browsers <> "filter") (noCommas x)
 
 -------------------------------------------------------------------------------

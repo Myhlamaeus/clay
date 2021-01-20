@@ -62,7 +62,7 @@ import Clay.Common
 import Clay.Property
 import Clay.Stylesheet
 
-pkey :: Val a => Prefixed -> a -> Css
+pkey :: (Val a, Style m) => Prefixed -> a -> m ()
 pkey k = prefixed (browsers <> k)
 
 -------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ pkey k = prefixed (browsers <> k)
 -- a shorthand syntax.
 
 class Val a => Mask a where
-  mask :: a -> Css
+  mask :: Style m => a -> m ()
   mask = pkey "mask"
 
 instance Mask a => Mask [a]
@@ -109,64 +109,64 @@ destinationOut       = other "destination-out"
 destinationAtop      = other "destination-atop"
 xor                  = other "xor"
 
-maskComposite :: MaskComposite -> Css
+maskComposite :: Style m => MaskComposite -> m ()
 maskComposite = pkey "mask-composite"
 
-maskComposites :: [MaskComposite] -> Css
+maskComposites :: Style m => [MaskComposite] -> m ()
 maskComposites = pkey "mask-composite"
 
 -------------------------------------------------------------------------------
 
-maskPosition :: BackgroundPosition -> Css
+maskPosition :: Style m => BackgroundPosition -> m ()
 maskPosition = pkey "mask-position"
 
-maskPositions :: [BackgroundPosition] -> Css
+maskPositions :: Style m => [BackgroundPosition] -> m ()
 maskPositions = pkey "mask-position"
 
 -------------------------------------------------------------------------------
 
-maskSize :: BackgroundSize -> Css
+maskSize :: Style m => BackgroundSize -> m ()
 maskSize = pkey "mask-size"
 
-maskSizes :: [BackgroundSize] -> Css
+maskSizes :: Style m => [BackgroundSize] -> m ()
 maskSizes = pkey "mask-size"
 
 -------------------------------------------------------------------------------
 
-maskRepeat :: BackgroundRepeat -> Css
+maskRepeat :: Style m => BackgroundRepeat -> m ()
 maskRepeat = pkey "mask-repeat"
 
-maskRepeats :: [BackgroundRepeat] -> Css
+maskRepeats :: Style m => [BackgroundRepeat] -> m ()
 maskRepeats = pkey "mask-repeat"
 
 -------------------------------------------------------------------------------
 
-maskImage :: BackgroundImage -> Css
+maskImage :: Style m => BackgroundImage -> m ()
 maskImage = pkey "mask-image"
 
-maskImages :: [BackgroundImage] -> Css
+maskImages :: Style m => [BackgroundImage] -> m ()
 maskImages = pkey "mask-image"
 
 -------------------------------------------------------------------------------
 
-maskOrigin :: BackgroundOrigin -> Css
+maskOrigin :: Style m => BackgroundOrigin -> m ()
 maskOrigin = pkey "mask-origin"
 
-maskOrigins :: [BackgroundOrigin] -> Css
+maskOrigins :: Style m => [BackgroundOrigin] -> m ()
 maskOrigins = pkey "mask-origin"
 
 -------------------------------------------------------------------------------
 
-maskClip :: BackgroundClip -> Css
+maskClip :: Style m => BackgroundClip -> m ()
 maskClip = pkey "mask-clip"
 
-maskClips :: [BackgroundClip] -> Css
+maskClips :: Style m => [BackgroundClip] -> m ()
 maskClips = pkey "mask-clip"
 
 -------------------------------------------------------------------------------
 
-maskAttachment :: BackgroundAttachment -> Css
+maskAttachment :: Style m => BackgroundAttachment -> m ()
 maskAttachment = pkey "mask-attachment"
 
-maskAttachments :: [BackgroundAttachment] -> Css
+maskAttachments :: Style m => [BackgroundAttachment] -> m ()
 maskAttachments = pkey "mask-attachment"

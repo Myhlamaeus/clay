@@ -1,3 +1,6 @@
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -5,8 +8,21 @@
 module Clay.Stylesheet where
 
 import Control.Applicative
-import Control.Arrow (second)
-import Control.Monad.Writer (Writer, execWriter, tell)
+import Control.Monad (MonadPlus)
+import Control.Monad.Cont (ContT)
+import Control.Monad.Except (ExceptT)
+import Control.Monad.Fail (MonadFail)
+import Control.Monad.Fix (MonadFix)
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Identity (Identity(runIdentity))
+import Control.Monad.Reader (ReaderT)
+import Control.Monad.Trans (MonadTrans(lift))
+import Control.Monad.Writer (censor, WriterT(runWriterT),  execWriterT, tell)
+import qualified Control.Monad.RWS.Lazy as RWSLazy
+import qualified Control.Monad.RWS.Strict as RWSStrict
+import qualified Control.Monad.State.Lazy as StateLazy
+import qualified Control.Monad.State.Strict as StateStrict
+import qualified Control.Monad.Writer.Strict as WriterStrict
 import Data.Maybe (isJust)
 import Data.String (IsString)
 import Data.Text (Text)
@@ -69,7 +85,7 @@ data Keyframes = Keyframes Text [(Double, [Rule])]
   deriving Show
 
 class IsDirectional dir where
-  keyDirectional :: Val a => PartedKey a -> dir a -> Css
+  keyDirectional :: Style m => Val a => PartedKey a -> dir a -> m ()
   bothToEach :: dir a -> dir a
   flipAxes :: dir a -> dir a
   flipOverBlock :: dir a -> dir a
@@ -114,14 +130,44 @@ data Rule
   | CustomMedia    Text       CustomMediaQuery
   deriving Show
 
-newtype StyleM a = S (Writer [Rule] a)
-  deriving (Functor, Applicative, Monad)
+newtype StyleT m a = StyleT { unStyleT :: WriterT [Rule] m a }
+  deriving (Functor, Applicative, Monad, MonadTrans, MonadFix, MonadFail, MonadIO, Alternative, MonadPlus)
 
-runS :: Css -> [Rule]
-runS (S a) = execWriter a
+class Monad m => Style m where
+  rule :: Rule -> m ()
+  default rule :: ( MonadTrans t
+                 , m ~ t m'
+                 , Style m'
+                 )
+               => Rule -> m ()
+  rule = lift . rule
 
-rule :: Rule -> Css
-rule a = S (tell [a])
+modifyRules :: Monad m => ([Rule] -> [Rule]) -> StyleT m a -> StyleT m a
+modifyRules f (StyleT a) = StyleT $ censor f a
+
+instance Monad m => Style (StyleT m) where
+  rule = StyleT . tell . pure
+
+instance Style m => Style (ContT r m)
+instance Style m => Style (ExceptT e m)
+instance (Style m, Monoid w) => Style (RWSLazy.RWST r w s m)
+instance (Style m, Monoid w) => Style (RWSStrict.RWST r w s m)
+instance Style m => Style (ReaderT r m)
+instance Style m => Style (StateLazy.StateT s m)
+instance Style m => Style (StateStrict.StateT s m)
+instance (Style m, Monoid w) => Style (WriterT w m)
+instance (Style m, Monoid w) => Style (WriterStrict.WriterT w m)
+
+type StyleM = StyleT Identity
+
+runStyleT :: Monad m => StyleT m a -> m (a, [Rule])
+runStyleT (StyleT a) = runWriterT a
+
+execStyleT :: Monad m => StyleT m a -> m [Rule]
+execStyleT (StyleT a) = execWriterT a
+
+runS :: StyleT Identity () -> [Rule]
+runS = runIdentity . execStyleT
 
 -- | The `Css` context is used to collect style rules which are mappings from
 -- selectors to style properties. The `Css` type is a computation in the
@@ -140,16 +186,16 @@ instance Monoid Css where
 -- value. The value can be any type that is in the `Val' typeclass, with other
 -- words: can be converted to a `Value`.
 
-key :: Val a => Key a -> a -> Css
+key :: (Val a, Style m) => Key a -> a -> m ()
 key k v = rule $ Property [] (cast k) (value v)
 
-keyAxial :: Val a => PartedKey a -> Axial a -> Css
+keyAxial :: (Val a, Style m) => PartedKey a -> Axial a -> m ()
 keyAxial k v = rule $ PropertyAxial [] (castParted k) (value <$> v)
 
 -- | Add a new style property to the stylesheet with the specified `Key` and
 -- value, like `key` but use a `Prefixed` key.
 
-prefixed :: Val a => Prefixed -> a -> Css
+prefixed :: (Val a, Style m) => Prefixed -> a -> m ()
 prefixed xs = key (Key xs)
 
 infix 4 -:
@@ -158,7 +204,7 @@ infix 4 -:
 -- for which there is no embedded version available. Both the key and the value
 -- are plain text values and rendered as is to the output CSS.
 
-(-:) :: Key Text -> Text -> Css
+(-:) :: Style m => Key Text -> Text -> m ()
 (-:) = key
 
 -------------------------------------------------------------------------------
@@ -167,72 +213,80 @@ infixr 5 <?
 infixr 5 ?
 infixr 5 &
 
+nest :: Monad m => App -> StyleT m () -> StyleT m ()
+nest app = modifyRules (pure . Nested app)
+
 -- | Assign a stylesheet to a selector. When the selector is nested inside an
 -- outer scope it will be composed with `deep`.
 
-(?) :: Selector -> Css -> Css
-(?) sel rs = rule $ Nested (Sub sel) (runS rs)
+(?) :: Monad m => Selector -> StyleT m () -> StyleT m ()
+(?) sel = nest (Sub sel)
 
 -- | Assign a stylesheet to a selector. When the selector is nested inside an
 -- outer scope it will be composed with `|>`.
 
-(<?) :: Selector -> Css -> Css
-(<?) sel rs = rule $ Nested (Child sel) (runS rs)
+(<?) :: Monad m => Selector -> StyleT m () -> StyleT m ()
+(<?) sel = nest (Child sel)
 
 -- | Assign a stylesheet to a filter selector. When the selector is nested
 -- inside an outer scope it will be composed with the `with` selector.
 
-(&) :: Refinement -> Css -> Css
-(&) p rs = rule $ Nested (Self p) (runS rs)
+(&) :: Monad m => Refinement -> StyleT m () -> StyleT m ()
+(&) p = nest (Self p)
 
 -- | Root is used to add style rules to the top scope.
 
-root :: Selector -> Css -> Css
-root sel rs = rule $ Nested (Root sel) (runS rs)
+root :: Monad m => Selector -> StyleT m () -> StyleT m ()
+root sel = nest (Root sel)
 
 -- | Pop is used to add style rules to selectors defined in an outer scope. The
 -- counter specifies how far up the scope stack we want to add the rules.
 
-pop :: Int -> Css -> Css
-pop i rs = rule $ Nested (Pop i) (runS rs)
+pop :: Monad m => Int -> StyleT m () -> StyleT m ()
+pop i = nest (Pop i)
 
 -------------------------------------------------------------------------------
+
+nestQuery :: Monad m => Maybe NotOrOnly -> MediaType -> [Feature] -> StyleT m () -> StyleT m ()
+nestQuery noo ty fs = modifyRules (pure . Query (MediaQuery noo ty fs))
 
 -- | Apply a set of style rules when the media type and feature queries apply.
 
-query :: MediaType -> [Feature] -> Css -> Css
-query ty fs rs = rule $ Query (MediaQuery Nothing ty fs) (runS rs)
+query :: Monad m => MediaType -> [Feature] -> StyleT m () -> StyleT m ()
+query = nestQuery Nothing
 
 -- | Apply a set of style rules when the media type and feature queries do not apply.
 
-queryNot :: MediaType -> [Feature] -> Css -> Css
-queryNot ty fs rs = rule $ Query (MediaQuery (Just Not) ty fs) (runS rs)
+queryNot :: Monad m => MediaType -> [Feature] -> StyleT m () -> StyleT m ()
+queryNot = nestQuery (Just Not)
 
 -- | Apply a set of style rules only when the media type and feature queries apply.
 
-queryOnly :: MediaType -> [Feature] -> Css -> Css
-queryOnly ty fs rs = rule $ Query (MediaQuery (Just Only) ty fs) (runS rs)
+queryOnly :: Monad m => MediaType -> [Feature] -> StyleT m () -> StyleT m ()
+queryOnly = nestQuery (Just Only)
 
 -------------------------------------------------------------------------------
 
-keyframes :: Text -> [(Double, Css)] -> Css
-keyframes n xs = rule $ Keyframe (Keyframes n (map (second runS) xs))
+keyframes :: Monad m => Text -> [(Double, StyleT m ())] -> StyleT m ()
+keyframes n xs = rule . Keyframe . Keyframes n =<< traverse execSnd xs
+  where
+    execSnd (i, rs) = lift $ (i, ) <$> execStyleT rs
 
-keyframesFromTo :: Text -> Css -> Css -> Css
+keyframesFromTo :: Monad m => Text -> StyleT m () -> StyleT m () -> StyleT m ()
 keyframesFromTo n a b = keyframes n [(0, a), (100, b)]
 
 -------------------------------------------------------------------------------
 
 -- | Define a new font-face.
 
-fontFace :: Css -> Css
-fontFace rs = rule $ Face (runS rs)
+fontFace :: Monad m => StyleT m () -> StyleT m ()
+fontFace = modifyRules (pure . Face)
 
 
 -- | Import a CSS file from a URL
 
-importUrl :: Text -> Css
-importUrl l = rule $ Import l
+importUrl :: Style m => Text -> m ()
+importUrl = rule . Import
 
 -------------------------------------------------------------------------------
 
@@ -249,7 +303,7 @@ importUrl l = rule $ Import l
 -- >   background: white;
 -- > }
 
-defineCustomSel :: Text -> Selector -> StyleM Refinement
+defineCustomSel :: Style m => Text -> Selector -> m Refinement
 defineCustomSel n s = do
   rule $ CustomSelector n s
   pure $ customSel n
@@ -296,8 +350,8 @@ defineCustomMedia n s = do
 -- otherwise take precedence.
 --
 -- Use sparingly.
-important :: Css -> Css
-important = foldMap (rule . addImportant) . runS
+important :: Monad m => StyleT m a -> StyleT m a
+important = modifyRules (addImportant <$>)
 
 -- The last case indicates there may be something wrong in the typing, as
 -- it shouldn't be possible to make a non-property important. In practice,
@@ -321,7 +375,7 @@ addImportant r                   = r
 -- | > all_ unset
 -- | > all_ initial
 -- | > all_ revert
-all_ :: Value -> Css
+all_ :: Monad m => Value -> StyleT m ()
 all_ = key "all"
 
 -------------------------------------------------------------------------------
@@ -343,7 +397,7 @@ customPropToText (CustomProp k) = "--" <> k
 -- |
 -- | > --primary: #ff0000;
 -- | > color: var(--primary);
-customProp :: Val a => CustomProp -> a -> Css
+customProp :: (Val a, Style m) => CustomProp -> a -> m ()
 customProp k = key $ Key $ Plain $ customPropToText k
 
 -- | Read a custom prop.
@@ -360,5 +414,5 @@ var = other . value
 -- |
 -- | > --primary: #ff0000;
 -- | > color: var(--primary);
-defineCustomProp :: (Val a, Other a) => CustomProp -> (a, a -> Css)
+defineCustomProp :: (Val a, Other a, Style m) => CustomProp -> (a, a -> m ())
 defineCustomProp k = (var k, customProp k)

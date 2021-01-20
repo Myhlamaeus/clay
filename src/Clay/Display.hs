@@ -91,7 +91,7 @@ import Data.Text (Text)
 
 -------------------------------------------------------------------------------
 
-float :: FloatStyle -> Css
+float :: Style m => FloatStyle -> m ()
 float = key "float"
 
 newtype FloatStyle = FloatStyle Value
@@ -113,7 +113,7 @@ clearLeft = Clear "left"
 clearRight :: Clear
 clearRight = Clear "right"
 
-clear :: Clear -> Css
+clear :: Style m => Clear -> m ()
 clear = key "clear"
 
 -------------------------------------------------------------------------------
@@ -129,7 +129,7 @@ fixed    = Position "fixed"
 relative = Position "relative"
 sticky = Position $ Value (webkit <> Plain "sticky")
 
-position :: Position -> Css
+position :: Style m => Position -> m ()
 position = key "position"
 
 -------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ inlineFlex       = Display "inline-flex"
 grid             = Display "grid"
 inlineGrid       = Display "inline-grid"
 
-display :: Display -> Css
+display :: Style m => Display -> m ()
 display = key "display"
 
 -------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ newtype Overflow = Overflow Value
 scroll :: Overflow
 scroll = Overflow "scroll"
 
-overflow, overflowX, overflowY :: Overflow -> Css
+overflow, overflowX, overflowY :: Style m => Overflow -> m ()
 
 overflow  = key "overflow"
 overflowX = key "overflow-x"
@@ -193,7 +193,7 @@ separate, collapse :: Visibility
 collapse = Visibility "collapse"
 separate = Visibility "separate"
 
-visibility :: Visibility -> Css
+visibility :: Style m => Visibility -> m ()
 visibility = key "visibility"
 
 -------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ visibility = key "visibility"
 newtype Clip = Clip Value
   deriving (Val, Other, Auto, GlobalValues)
 
-clip :: Clip -> Css
+clip :: Style m => Clip -> m ()
 clip = key "clip"
 
 rect :: Size a -> Size a -> Size a -> Size a -> Clip
@@ -209,10 +209,10 @@ rect t r b l = Clip (mconcat ["rect(", value t, ",", value r, ",", value b, ",",
 
 -------------------------------------------------------------------------------
 
-opacity :: Double -> Css
+opacity :: Style m => Double -> m ()
 opacity = key "opacity"
 
-zIndex :: Integer -> Css
+zIndex :: Style m => Integer -> m ()
 zIndex i = key "z-index" (fromString (show i) :: Value)
 
 -------------------------------------------------------------------------------
@@ -231,13 +231,13 @@ fillEvents     = PointerEvents "fill"
 strokeEvents   = PointerEvents "stroke"
 allEvents      = PointerEvents "all"
 
-pointerEvents :: PointerEvents -> Css
+pointerEvents :: Style m => PointerEvents -> m ()
 pointerEvents = key "pointer-events"
 
 -------------------------------------------------------------------------------
 
 class (Val a) => VerticalAlign a where
-    verticalAlign :: a -> Css
+    verticalAlign :: Style m => a -> m ()
     verticalAlign = key "vertical-align"
 
 newtype VerticalAlignValue = VerticalAlignValue Value deriving (Val, Baseline)
@@ -259,7 +259,7 @@ vAlignBottom = VerticalAlignValue "bottom"
 -------------------------------------------------------------------------------
 
 class (Val a) => Cursor a where
-    cursor :: a -> Css
+    cursor :: Style m => a -> m ()
     cursor = key "cursor"
 
 newtype CursorValue a = CursorValue Value deriving (Val, GlobalValues, Auto, None)

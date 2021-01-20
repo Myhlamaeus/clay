@@ -45,7 +45,7 @@ import           Clay.Property
 import           Clay.Size
 import           Clay.Stylesheet
 
-boxSize, minBoxSize, maxBoxSize :: Axial (Size a) -> Css
+boxSize, minBoxSize, maxBoxSize :: Style m => Axial (Size a) -> m ()
 
 -- | Set the size of a box
 -- >>> render $ boxSize $ block' $ px 5
@@ -81,7 +81,7 @@ maxBoxSize = keyAxial (PartedKey [] (Just "max") "size" Nothing)
 --
 -- >>> renderLogical $ padding $ all' $ px 5
 -- padding: 5px;
-padding :: IsDirectional dir => dir (Size a) -> Css
+padding :: (IsDirectional dir, Style m) => dir (Size a) -> m ()
 padding = keyDirectional "padding"
 
 -------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ padding = keyDirectional "padding"
 --
 -- >>> renderLogical $ scrollPadding $ block' $ px 5
 -- scroll-padding-block: 5px;
-scrollPadding :: IsDirectional dir => dir (Size a) -> Css
+scrollPadding :: (IsDirectional dir, Style m) => dir (Size a) -> m ()
 scrollPadding = keyDirectional "scroll-padding"
 
 -------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ scrollPadding = keyDirectional "scroll-padding"
 --
 -- >>> renderLogical $ margin $ eachAxis (px 5) (px 10)
 -- margin: logical 5px 10px;
-margin :: IsDirectional dir => dir (Size a) -> Css
+margin :: (IsDirectional dir, Style m) => dir (Size a) -> m ()
 margin = keyDirectional "margin"
 
 -------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ margin = keyDirectional "margin"
 --
 -- >>> renderLogical $ margin $ eachDir (px 5) (px 10) (px 15) (px 20)
 -- scroll-margin: logical 5px 10px 15px 20px;
-scrollMargin :: IsDirectional dir => dir (Size a) -> Css
+scrollMargin :: (IsDirectional dir, Style m) => dir (Size a) -> m ()
 scrollMargin = keyDirectional "scroll-margin"
 
 -------------------------------------------------------------------------------
@@ -127,7 +127,7 @@ scrollMargin = keyDirectional "scroll-margin"
 -- >>> renderLogical $ margin $ start' $ px 5
 -- inset-block-start: 5px;
 -- inset-inline-start: 5px;
-posInset :: IsDirectional dir => dir (Size a) -> Css
+posInset :: (IsDirectional dir, Style m) => dir (Size a) -> m ()
 posInset = keyDirectional "inset"
 
 -------------------------------------------------------------------------------
@@ -179,7 +179,7 @@ mkBorder = Border
 --
 -- >>> renderLogical $ border $ inlineEnd' $ mkBorder (px 5) solid yellow
 -- border-inline-end: 5px solid rgb(255, 255, 0);
-border :: IsDirectional dir => dir (Border LengthUnit) -> Css
+border :: (IsDirectional dir, Style m) => dir (Border LengthUnit) -> m ()
 border = keyDirectional "border"
 
 -- | Set the border-width of a box
@@ -188,7 +188,7 @@ border = keyDirectional "border"
 --
 -- >>> renderLogical $ borderWidth $ inlineEnd' $ px 5
 -- border-inline-end-width: 5px;
-borderWidth :: IsDirectional dir => dir (Size LengthUnit) -> Css
+borderWidth :: (IsDirectional dir, Style m) => dir (Size LengthUnit) -> m ()
 borderWidth = keyDirectional $ PartedKey [] Nothing "border" (Just "width")
 
 -- | Set the border-style of a box
@@ -197,7 +197,7 @@ borderWidth = keyDirectional $ PartedKey [] Nothing "border" (Just "width")
 --
 -- >>> renderLogical $ borderStyle $ inlineEnd' solid
 -- border-inline-end-style: solid;
-borderStyle :: IsDirectional dir => dir Stroke -> Css
+borderStyle :: (IsDirectional dir, Style m) => dir Stroke -> m ()
 borderStyle = keyDirectional $ PartedKey [] Nothing "border" (Just "style")
 
 -- | Set the border-color of a box
@@ -206,7 +206,7 @@ borderStyle = keyDirectional $ PartedKey [] Nothing "border" (Just "style")
 --
 -- >>> renderLogical $ borderColor $ inlineEnd' yellow
 -- border-inline-end-color: rgb(255, 255, 0);
-borderColor :: IsDirectional dir => dir Color -> Css
+borderColor :: (IsDirectional dir, Style m) => dir Color -> m ()
 borderColor = keyDirectional $ PartedKey [] Nothing "border" (Just "color")
 
 -------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ borderColor = keyDirectional $ PartedKey [] Nothing "border" (Just "color")
 --
 -- >>> renderLogical $ outline $ inlineEnd' $ mkBorder (px 5) solid yellow
 -- outline-inline-end: 5px solid rgb(255, 255, 0);
-outline :: IsDirectional dir => dir (Border LengthUnit) -> Css
+outline :: (IsDirectional dir, Style m) => dir (Border LengthUnit) -> m ()
 outline = keyDirectional "outline"
 
 -- | Set the outline-width of a box
@@ -226,7 +226,7 @@ outline = keyDirectional "outline"
 --
 -- >>> renderLogical $ outlineWidth $ inlineEnd' $ px 5
 -- outline-inline-end-width: 5px;
-outlineWidth :: IsDirectional dir => dir (Size LengthUnit) -> Css
+outlineWidth :: (IsDirectional dir, Style m) => dir (Size LengthUnit) -> m ()
 outlineWidth = keyDirectional $ PartedKey [] Nothing "outline" (Just "width")
 
 -- | Set the outline-style of a box
@@ -235,7 +235,7 @@ outlineWidth = keyDirectional $ PartedKey [] Nothing "outline" (Just "width")
 --
 -- >>> renderLogical $ outlineStyle $ inlineEnd' solid
 -- outline-inline-end-style: solid;
-outlineStyle :: IsDirectional dir => dir Stroke -> Css
+outlineStyle :: (IsDirectional dir, Style m) => dir Stroke -> m ()
 outlineStyle = keyDirectional $ PartedKey [] Nothing "outline" (Just "style")
 
 -- | Set the outline-color of a box
@@ -244,5 +244,5 @@ outlineStyle = keyDirectional $ PartedKey [] Nothing "outline" (Just "style")
 --
 -- >>> renderLogical $ outlineColor $ inlineEnd' yellow
 -- outline-inline-end-color: rgb(255, 255, 0);
-outlineColor :: IsDirectional dir => dir Color -> Css
+outlineColor :: (IsDirectional dir, Style m) => dir Color -> m ()
 outlineColor = keyDirectional $ PartedKey [] Nothing "outline" (Just "color")

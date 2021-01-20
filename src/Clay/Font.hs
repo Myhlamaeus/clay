@@ -82,7 +82,7 @@ import Clay.Size
 -- <http://www.w3.org/TR/css3-fonts/#font-prop>
 
 class Val a => Font a where
-  font :: a -> Css
+  font :: Style m => a -> m ()
   font = key "font"
 
 data Optional =
@@ -112,10 +112,10 @@ instance Font (Optional, Required a)
 
 -- | An alias for color.
 
-fontColor :: Color -> Css
+fontColor :: Style m => Color -> m ()
 fontColor = key "color"
 
-color :: Color -> Css
+color :: Style m => Color -> m ()
 color = key "color"
 
 -------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ fantasy   = GenericFontFamily "fantasy"
 -- | The `fontFamily` style rules takes to lists of font families: zero or more
 -- custom font-families and preferably one or more generic font families.
 
-fontFamily :: [Text] -> [GenericFontFamily] -> Css
+fontFamily :: Style m => [Text] -> [GenericFontFamily] -> m ()
 fontFamily a b = key "font-family" $
   let sep = if null a || null b then "" else ", "
    in value (Literal <$> a) <> sep <> value b
@@ -160,10 +160,10 @@ xxLarge = FontSize "xx-large"
 smaller = FontSize "smaller"
 larger  = FontSize "larger"
 
-fontSize :: Size a -> Css
+fontSize :: Style m => Size a -> m ()
 fontSize = key "font-size"
 
-fontSizeCustom :: FontSize -> Css
+fontSizeCustom :: Style m => FontSize -> m ()
 fontSizeCustom = key "font-size"
 
 -------------------------------------------------------------------------------
@@ -176,7 +176,7 @@ italic, oblique :: FontStyle
 italic = FontStyle "italic"
 oblique = FontStyle "oblique"
 
-fontStyle :: FontStyle -> Css
+fontStyle :: Style m => FontStyle -> m ()
 fontStyle = key "font-style"
 
 -------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ newtype FontVariant = FontVariant Value
 smallCaps :: FontVariant
 smallCaps = FontVariant "small-caps"
 
-fontVariant :: FontVariant -> Css
+fontVariant :: Style m => FontVariant -> m ()
 fontVariant = key "font-variant"
 
 -------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ lighter = FontWeight "lighter"
 weight :: Integer -> FontWeight
 weight i = FontWeight (value (pack (show i)))
 
-fontWeight :: FontWeight -> Css
+fontWeight :: Style m => FontWeight -> m ()
 fontWeight = key "font-weight"
 
 -------------------------------------------------------------------------------
@@ -223,5 +223,5 @@ statusBar    = NamedFont "status-bar"
 
 -------------------------------------------------------------------------------
 
-lineHeight :: Size a -> Css
+lineHeight :: Style m => Size a -> m ()
 lineHeight = key "line-height"

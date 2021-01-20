@@ -11,8 +11,8 @@ import Clay.Stylesheet
 -- | Annotate the supplied 'Css' with the supplied comment.
 -- Comments work with 'OverloadedStrings'. This will annotate every non-nested
 -- value.
-commenting :: CommentText -> Css -> Css
-commenting c css = foldMap (rule . addComment c) $ runS css
+commenting :: Monad m => CommentText -> StyleT m a -> StyleT m a
+commenting c = modifyRules ((addComment c) <$>)
 infixl 3 `commenting`
 
 -- The last case indicates there may be something wrong in the typing, as

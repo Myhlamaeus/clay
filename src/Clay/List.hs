@@ -70,7 +70,7 @@ upperAlpha          = ListStyleType "upper-alpha"
 upperLatin          = ListStyleType "upper-latin"
 upperRoman          = ListStyleType "upper-roman"
 
-listStyleType :: ListStyleType -> Css
+listStyleType :: Style m => ListStyleType -> m ()
 listStyleType = key "list-style-type"
 
 newtype ListStylePosition = ListStylePosition Value
@@ -81,17 +81,17 @@ inside, outside :: ListStylePosition
 inside  = ListStylePosition "inside"
 outside = ListStylePosition "outside"
 
-listStylePosition :: ListStylePosition -> Css
+listStylePosition :: Style m => ListStylePosition -> m ()
 listStylePosition = key "list-style-position"
 
 newtype ListStyleImage = ListStyleImage Value
   deriving (Val, GlobalValues, None, Other)
 
-listStyleImage :: ListStyleImage -> Css
+listStyleImage :: Style m => ListStyleImage -> m ()
 listStyleImage = key "list-style-image"
 
 imageUrl :: Text -> ListStyleImage
 imageUrl u = ListStyleImage ("url(" <> value (Literal u) <> ")")
 
-listStyle :: ListStyleType -> ListStylePosition -> ListStyleImage -> Css
+listStyle :: Style m => ListStyleType -> ListStylePosition -> ListStyleImage -> m ()
 listStyle a b c = key "list-style" (a ! b ! c)

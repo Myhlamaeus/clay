@@ -105,7 +105,7 @@ import Clay.Size
 -- into a shorthand syntax.
 
 class Val a => Background a where
-  background :: a -> Css
+  background :: Style m => a -> m ()
   background = key "background"
 
 instance Background a => Background [a]
@@ -122,7 +122,7 @@ instance Background BackgroundImage
 
 -------------------------------------------------------------------------------
 
-backgroundColor :: Color -> Css
+backgroundColor :: Style m => Color -> m ()
 backgroundColor = key "background-color"
 
 -------------------------------------------------------------------------------
@@ -136,10 +136,10 @@ placed a b = BackgroundPosition (value (a, b))
 positioned :: Size a -> Size a -> BackgroundPosition
 positioned a b = BackgroundPosition (value (a, b))
 
-backgroundPosition :: BackgroundPosition -> Css
+backgroundPosition :: Style m => BackgroundPosition -> m ()
 backgroundPosition = key "background-position"
 
-backgroundPositions :: [BackgroundPosition] -> Css
+backgroundPositions :: Style m => [BackgroundPosition] -> m ()
 backgroundPositions = key "background-position"
 
 -------------------------------------------------------------------------------
@@ -157,10 +157,10 @@ cover   = BackgroundSize "cover"
 by :: Size a -> Size b -> BackgroundSize
 by a b = BackgroundSize (value (a, b))
 
-backgroundSize :: BackgroundSize -> Css
+backgroundSize :: Style m => BackgroundSize -> m ()
 backgroundSize = key "background-size"
 
-backgroundSizes :: [BackgroundSize] -> Css
+backgroundSizes :: Style m => [BackgroundSize] -> m ()
 backgroundSizes = key "background-size"
 
 -------------------------------------------------------------------------------
@@ -183,10 +183,10 @@ repeatX, repeatY :: BackgroundRepeat
 repeatX = xyRepeat repeat noRepeat
 repeatY = xyRepeat noRepeat repeat
 
-backgroundRepeat :: BackgroundRepeat -> Css
+backgroundRepeat :: Style m => BackgroundRepeat -> m ()
 backgroundRepeat = key "background-repeat"
 
-backgroundRepeats :: [BackgroundRepeat] -> Css
+backgroundRepeats :: Style m => [BackgroundRepeat] -> m ()
 backgroundRepeats = key "background-repeat"
 
 -------------------------------------------------------------------------------
@@ -197,10 +197,10 @@ newtype BackgroundImage = BackgroundImage Value
 url :: Text -> BackgroundImage
 url u = BackgroundImage (value ("url(\"" <> u <> "\")"))
 
-backgroundImage :: BackgroundImage -> Css
+backgroundImage :: Style m => BackgroundImage -> m ()
 backgroundImage = key "background-image"
 
-backgroundImages :: [BackgroundImage] -> Css
+backgroundImages :: Style m => [BackgroundImage] -> m ()
 backgroundImages = key "background-image"
 
 -------------------------------------------------------------------------------
@@ -211,10 +211,10 @@ newtype BackgroundOrigin = BackgroundOrigin Value
 origin :: BoxType -> BackgroundOrigin
 origin b = BackgroundOrigin (value b)
 
-backgroundOrigin :: BackgroundOrigin -> Css
+backgroundOrigin :: Style m => BackgroundOrigin -> m ()
 backgroundOrigin = key "background-origin"
 
-backgroundOrigins :: [BackgroundOrigin] -> Css
+backgroundOrigins :: Style m => [BackgroundOrigin] -> m ()
 backgroundOrigins = key "background-origin"
 
 -------------------------------------------------------------------------------
@@ -225,10 +225,10 @@ newtype BackgroundClip = BackgroundClip Value
 boxClip :: BoxType -> BackgroundClip
 boxClip b = BackgroundClip (value b)
 
-backgroundClip :: BackgroundClip -> Css
+backgroundClip :: Style m => BackgroundClip -> m ()
 backgroundClip = key "background-clip"
 
-backgroundClips :: [BackgroundClip] -> Css
+backgroundClips :: Style m => [BackgroundClip] -> m ()
 backgroundClips = key "background-clip"
 
 -------------------------------------------------------------------------------
@@ -240,10 +240,10 @@ attachFixed, attachScroll :: BackgroundAttachment
 attachFixed  = BackgroundAttachment "fixed"
 attachScroll = BackgroundAttachment "scroll"
 
-backgroundAttachment :: BackgroundAttachment -> Css
+backgroundAttachment :: Style m => BackgroundAttachment -> m ()
 backgroundAttachment = key "background-attachment"
 
-backgroundAttachments :: [BackgroundAttachment] -> Css
+backgroundAttachments :: Style m => [BackgroundAttachment] -> m ()
 backgroundAttachments = key "background-attachment"
 
 -------------------------------------------------------------------------------

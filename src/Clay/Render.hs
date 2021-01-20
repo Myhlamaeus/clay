@@ -20,6 +20,7 @@ where
 
 import           Control.Applicative
 import           Control.Monad.Writer
+import           Control.Monad.Identity (runIdentity)
 import           Data.List              (sort)
 import           Data.Maybe
 import           Data.Text              (Text, pack)
@@ -142,12 +143,15 @@ renderLogical = renderWith (useLogical pretty) []
 -- | Render a stylesheet with a custom configuration and an optional outer
 -- scope.
 
-renderWith :: Config -> [App] -> Css -> Lazy.Text
-renderWith cfg top
+renderTWith :: Monad m => Config -> [App] -> StyleT m () -> m Lazy.Text
+renderTWith cfg top css
   = renderBanner cfg
   . toLazyText
   . rules cfg top
-  . runS
+  <$> execStyleT css
+
+renderWith :: Config -> [App] -> Css -> Lazy.Text
+renderWith cfg top = runIdentity . renderTWith cfg top
 
 -- | Render a single CSS `Selector`.
 
