@@ -1,4 +1,4 @@
-module Clay
+module Clay.V2
 (
 -- * Rendering stylesheets to CSS.
   render
