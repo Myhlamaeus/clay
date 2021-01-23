@@ -39,8 +39,8 @@ import           Clay.Stylesheet        hiding (Child, query, rule)
 
 import qualified Clay.Stylesheet        as Rule
 
-import Clay.Internal
-
+import Data.These
+import Control.Arrow
 
 data LayoutMode
   = LayoutLogical
@@ -49,6 +49,7 @@ data LayoutMode
     , layoutFlipBlock :: Bool
     , layoutFlipInline :: Bool
     }
+  deriving (Show, Eq, Ord)
 
 defaultLayoutMode, logical :: LayoutMode
 defaultLayoutMode = LayoutConvert False False False
@@ -248,6 +249,7 @@ rules cfg sel rs = mconcat
   [ rule cfg sel (mapMaybe property rs)
   , ruleAxial cfg sel (mapMaybe propertyAxial rs)
   , ruleDirectional cfg sel (mapMaybe propertyDirectional rs)
+  , ruleCornerDirectional cfg sel (mapMaybe propertyCornerDirectional rs)
   , newline cfg
   ,             imp            cfg     `foldMap` mapMaybe imports         rs
   ,             kframe         cfg     `foldMap` mapMaybe kframes         rs
@@ -257,26 +259,28 @@ rules cfg sel rs = mconcat
   , (\(a, b) -> rules  cfg (a : sel) b) `foldMap` mapMaybe nested          rs
   , (\(a, b) -> query  cfg  a   sel  b) `foldMap` mapMaybe queries         rs
   ]
-  where property            (Property m k v)            = Just (m, k, v)
-        property            _                           = Nothing
-        propertyAxial       (PropertyAxial m k v)       = Just (m, k, v)
-        propertyAxial       _                           = Nothing
-        propertyDirectional (PropertyDirectional m k v) = Just (m, k, v)
-        propertyDirectional _                           = Nothing
-        nested              (Nested a ns)               = Just (a, ns)
-        nested              _                           = Nothing
-        queries             (Query q ns )               = Just (q, ns)
-        queries             _                           = Nothing
-        kframes             (Keyframe fs)               = Just fs
-        kframes             _                           = Nothing
-        faces               (Face ns    )               = Just ns
-        faces               _                           = Nothing
-        imports             (Import i   )               = Just i
-        imports             _                           = Nothing
-        customSelectors     (CustomSelector n s)        = Just (n, s)
-        customSelectors     _                           = Nothing
-        customMedias        (CustomMedia n mq)          = Just (n, mq)
-        customMedias        _                           = Nothing
+  where property                  (Property m k v)                  = Just (m, k, v)
+        property                  _                                 = Nothing
+        propertyAxial             (PropertyAxial m k v)             = Just       (m, k, v)
+        propertyAxial             _                                 = Nothing
+        propertyDirectional       (PropertyDirectional m k v)       = Just       (m, k, v)
+        propertyDirectional       _                                 = Nothing
+        propertyCornerDirectional (PropertyCornerDirectional m k v) = Just (m, k, v)
+        propertyCornerDirectional _                                 = Nothing
+        nested                    (Nested a ns)                     = Just       (a, ns)
+        nested                    _                                 = Nothing
+        queries                   (Query q ns )                     = Just       (q, ns)
+        queries                   _                                 = Nothing
+        kframes                   (Keyframe fs)                     = Just fs
+        kframes                   _                                 = Nothing
+        faces                     (Face ns    )                     = Just ns
+        faces                     _                                 = Nothing
+        imports                   (Import i   )                     = Just i
+        imports                   _                                 = Nothing
+        customSelectors           (CustomSelector n s)              = Just       (n, s)
+        customSelectors           _                                 = Nothing
+        customMedias              (CustomMedia n mq)                = Just       (n, mq)
+        customMedias              _                                 = Nothing
 
 imp :: Config -> Text -> Builder
 imp cfg t =
@@ -311,6 +315,10 @@ ruleAxial cfg sel props = rule' cfg sel $ collectAxial (layoutMode cfg) =<< prop
 
 ruleDirectional :: Config -> [App] -> [PartedKeyVal (Directional Value)] -> Builder
 ruleDirectional cfg sel props = rule' cfg sel $ collectDirectional (layoutMode cfg) =<< props
+
+ruleCornerDirectional :: Config -> [App] -> [PartedKeyVal (CornerDirectional (Value, Value))] -> Builder
+ruleCornerDirectional cfg sel props = rule' cfg sel $ collectCornerDirectional (layoutMode cfg) =<< props
+
 
 
 merger :: [App] -> Selector
@@ -370,81 +378,130 @@ fromLogical (LayoutConvert True b i) a = fromLogical (LayoutConvert False b i) $
 fromLogical (LayoutConvert f True i) a = fromLogical (LayoutConvert f False i) $ flipOverInline a
 fromLogical (LayoutConvert f b True) a = fromLogical (LayoutConvert f b False) $ flipOverBlock a
 
+data Axis = AxisBlock | AxisInline
+
+collectAxialSide :: LayoutMode -> PartedKeyVal (Axial Value) -> [Representation]
+collectAxialSide l (ms, k@(PartedKey _ k'), v) = go =<< splitAxes (fromLogical l v)
+  where
+    go (AxisBlock, b) = case l of
+      LayoutLogical -> collect (ms, partedToKey (Just "block") k, b)
+      _ ->  case k' of
+        That "size" -> collect (ms, "height", b)
+        These "min" "size" -> collect (ms, "min-height", b)
+        These "max" "size" -> collect (ms, "max-height", b)
+        _ -> collectDirectional l (ms, k, toDirectional $ block' b)
+    go (AxisInline, i) = case l of
+      LayoutLogical -> collect (ms, partedToKey (Just "inline") k, i)
+      _ ->  case k' of
+        That "size" -> collect (ms, "width", i)
+        These "min" "size" -> collect (ms, "min-width", i)
+        These "max" "size" -> collect (ms, "max-width", i)
+        _ -> collectDirectional l (ms, k, toDirectional $ inline' i)
+    splitAxes = mergeTheseWith (pure . (AxisBlock, )) (pure . (AxisInline, )) (<>) . unAxial
+
 collectAxial :: LayoutMode -> PartedKeyVal (Axial Value) -> [Representation]
-collectAxial l (ms, PartedKey pfx Nothing "inset" Nothing, ax) = case (l, fromLogical l ax) of
-  (LayoutLogical, AxialBoth a) -> collect (ms, logicalShorthand, a)
-  (LayoutLogical, AxialEach b i) -> collect (ms, logicalShorthand, noCommas [b, i])
-  (LayoutLogical, ax') -> case axialToTuple ax' of
-    (Just b, Just i) -> collect (ms, logicalShorthand, noCommas [b, i])
-    (b, i) -> join $ zipWith (\k v -> foldMap (collect . (ms, k, )) v) logicalKeys [b, i]
-  (_, ax') -> case axialToTuple ax' of
-    (b, i) -> join $ zipWith (\k v -> foldMap (collect . (ms, k, )) v) physicalKeys [b, i, b, i]
+collectAxial l (ms, k, v) | l /= LayoutLogical && l /= (LayoutConvert False False False) = collectAxial (LayoutConvert False False False) (ms, k, fromLogical l v)
+collectAxial l (ms_, k_, v_) = collectAxial' l (ms_, k_, fromLogical l v_)
   where
-    ky n = case pfx of
-      [] -> Key $ Plain n
-      pfx' -> Key $ Prefixed $ (, n) <$> pfx'
-    logicalShorthand = ky "inset"
-    logicalKeys = ky . ("inset-" <>) <$> ["block", "inline"]
-    physicalKeys = ky <$> ["top", "right", "bottom", "left"]
-collectAxial l (ms, PartedKey pfx xpfx k sfx, ax) = case (l, k, fromLogical l ax) of
-  (LayoutLogical, "size", ax') -> case axialToTuple ax' of
-    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) logicalKeys [b, i]
-  (_, "size", ax') -> case axialToTuple ax' of
-    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) physicalKeys [b, i]
-  (_, _, AxialBoth a) -> collect (ms, shorthand, a)
-  (LayoutLogical, "border", AxialEach b i) -> join $ zipWith (\k' -> collect . (ms, k', )) logicalKeys [b, i]
-  (LayoutLogical, _, AxialEach b i) -> collect (ms, shorthand, noCommas ["logical", b, i])
-  (LayoutLogical, _, ax') -> case axialToTuple ax' of
-    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) logicalKeys [b, i]
-  (_, "border", AxialEach b i) -> join $ zipWith (\k' -> collect . (ms, k', )) physicalKeys [b, i, b, i]
-  (_, _, AxialEach b i) -> collect (ms, shorthand, noCommas [b, i])
-  (_, _, ax') -> case axialToTuple ax' of
-    (b, i) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) physicalKeys [b, i, b, i]
+  -- Inset doesn't have physical axial shorthands
+  collectAxial' (LayoutConvert _ _ _) (ms, k@(PartedKey _ (This "inset")), v) = collectDirectional l (ms, k, toDirectional v)
+  -- Size properties don't have a shorthand
+  collectAxial' _ (ms, k@(PartedKey _ (That "size")),      v) = collectAxialSide l (ms, k, v)
+  collectAxial' _ (ms, k@(PartedKey _ (These _ "size")),   v) = collectAxialSide l (ms, k, v)
+  -- Border has no shorthand for specifying different values per axis (ie no "border: 1px solid white 1px solid white")
+  collectAxial' _ (ms, k@(PartedKey _ (This "border")),    v@(Axial (These b i))) | b == i     = collect (ms, partedToKey Nothing k, b)
+                                                                                | otherwise = collectAxialSide l (ms, k, v)
+  -- Use the appropriate shorthand and prefix values of logical shorthands with "logical "
+  collectAxial' _ (ms, k, Axial (These b i)) | b == i     = collect (ms, partedToKey Nothing k, b)
+                                             | otherwise = collect (ms, partedToKey Nothing k,
+                                                                      case l of
+                                                                        LayoutLogical -> noCommas ["logical", b, i]
+                                                                        _ -> noCommas [b, i]
+                                                                   )
+  collectAxial' _ (ms, k, v) = collectAxialSide l (ms, k, v)
+
+data Dir = DirStart Axis | DirEnd Axis
+
+collectDirectionalSeparate :: LayoutMode -> PartedKeyVal (Directional Value) -> [Representation]
+collectDirectionalSeparate l (ms, k@(PartedKey _ k'), v) = go =<< splitDir (fromLogical l v)
   where
-    xprefix = (maybe "" (<> "-") xpfx <>)
-    ky n = case pfx of
-      [] -> Key $ Plain $ xprefix n
-      pfx' -> Key $ Prefixed $ (, xprefix n) <$> pfx'
-    shorthand = ky k
-    suffix = (<> maybe "" ("-" <>) sfx)
-    logicalKeys = case k of
-      "size" -> ky <$> ["block-size", "inline-size"]
-      k' -> ky . suffix . ((k' <> "-") <>) <$> ["block", "inline"]
-    physicalKeys = case k of
-      "size" -> ky <$> ["height", "width"]
-      k' -> ky . suffix . ((k' <> "-") <>) <$> ["top", "right", "bottom", "left"]
+    go (DirStart AxisBlock, bs) = case l of
+      LayoutLogical -> collect (ms, partedToKey (Just "block-start") k, bs)
+      _ ->  case k' of
+        That "inset" -> collect (ms, "top", bs)
+        _ -> collect (ms, partedToKey (Just "top") k, bs)
+    go (DirStart AxisInline, is) = case l of
+      LayoutLogical -> collect (ms, partedToKey (Just "inline-start") k, is)
+      _ ->  case k' of
+        That "inset" -> collect (ms, "left", is)
+        _ -> collect (ms, partedToKey (Just "left") k, is)
+    go (DirEnd AxisBlock, be) = case l of
+      LayoutLogical -> collect (ms, partedToKey (Just "block-end") k, be)
+      _ ->  case k' of
+        That "inset" -> collect (ms, "bottom", be)
+        _ -> collect (ms, partedToKey (Just "bottom") k, be)
+    go (DirEnd AxisInline, ie) = case l of
+      LayoutLogical -> collect (ms, partedToKey (Just "inline-end") k, ie)
+      _ ->  case k' of
+        That "inset" -> collect (ms, "right", ie)
+        _ -> collect (ms, partedToKey (Just "right") k, ie)
+    splitAxes = mergeTheseWith (pure . (AxisBlock, )) (pure . (AxisInline, )) (<>) . unAxial
+    splitDir = mergeTheseWith (fmap (first DirStart) . splitAxes) (fmap (first DirEnd) . splitAxes) (<>) . unDirectional
 
 collectDirectional :: LayoutMode -> PartedKeyVal (Directional Value) -> [Representation]
-collectDirectional l (ms, PartedKey pfx Nothing "inset" Nothing, dir) = case (l, directionalToTuple $ fromLogical l dir) of
-  (LayoutLogical, (Just bs, Just is, Just be, Just ie)) -> collect (ms, logicalShorthand, noCommas [bs, is, be, ie])
-  (LayoutLogical, (bs, is, be, ie)) -> join $ zipWith (\k -> foldMap (collect . (ms, k, ))) logicalKeys [bs, is, be, ie]
-  -- inline-start and inline-end are flipped in physical
-  (_, (bs, is, be, ie)) -> join $ zipWith (\k v -> foldMap (collect . (ms, k, )) v) physicalKeys [bs, ie, be, is]
+collectDirectional l (ms, k, v) | l /= LayoutLogical && l /= (LayoutConvert False False False) = collectDirectional (LayoutConvert False False False) (ms, k, fromLogical l v)
+collectDirectional l (ms_, k_, v_) = collectDirectional' l (ms_, k_, fromLogical l v_)
   where
-    ky n = case pfx of
-      [] -> Key $ Plain n
-      pfx' -> Key $ Prefixed $ (, n) <$> pfx'
-    logicalShorthand = ky "inset"
-    logicalKeys = ky . ("inset-" <>) <$> ["block-start", "inline-start", "block-end", "inline-end"]
-    physicalKeys = ky <$> ["top", "right", "bottom", "left"]
-collectDirectional l (ms, PartedKey pfx xpfx k sfx, dir) = case (l, k, directionalToTuple $ fromLogical l dir) of
-  (LayoutLogical, "border", (Just bs, Just is, Just be, Just ie)) -> join $ zipWith (\k' -> collect . (ms, k', )) logicalKeys [bs, is, be, ie]
-  (LayoutLogical, _, (Just bs, Just is, Just be, Just ie)) -> collect (ms, shorthand, noCommas ["logical", bs, is, be, ie])
-  (LayoutLogical, _, (bs, is, be, ie)) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) logicalKeys [bs, is, be, ie]
-  -- inline-start and inline-end are flipped in physical
-  (LayoutConvert _ _ _, "border", (Just bs, Just is, Just be, Just ie)) -> join $ zipWith (\k' -> collect . (ms, k', )) physicalKeys [bs, ie, be, is]
-  (_, _, (Just bs, Just is, Just be, Just ie)) -> collect (ms, shorthand, noCommas [bs, ie, be, is])
-  (_, _, (bs, is, be, ie)) -> join $ zipWith (\k' -> foldMap (collect . (ms, k', ))) physicalKeys [bs, ie, be, is]
+    -- There's no shorthand for top/right/bottom/left
+    collectDirectional' (LayoutConvert _ _ _) (ms, k@(PartedKey _ (This "inset")), v) = collectDirectionalSeparate l (ms, k, v)
+    collectDirectional' _ (ms, k@(PartedKey _ k'), Directional (These (Axial (These bs is)) (Axial (These be ie))))
+      -- If there is no shorthand available collectAxial splits up the axes and recurses into collectDirectional for each of them;
+      -- this is safe, as it wouldn't match 'Axial (These s e)' on either side
+      | bs == be && is == ie = collectAxial l (ms, k, eachAxis bs is)
+      | otherwise = collect (ms, partedToKey Nothing k, noCommas $ case l of
+                                LayoutLogical -> case k' of
+                                  -- Logical inset is missing the "logical" keyword for whatever reason
+                                  This "inset" -> [bs, is, be, ie]
+                                  _ ->            ["logical", bs, is, be, ie]
+                                -- Physical layouts have inline-start and inline-end (left and right) flipped in the shorthand
+                                _ -> [bs, ie, be, is]
+                            )
+    collectDirectional' _ (ms, k, v@(Directional (These (Axial (This bs)) (Axial (This be)))))
+      -- We can only safely recurse into collectAxial if there's a shorthand available
+      | bs == be && l == LayoutLogical = collectAxial l (ms, k, block' bs)
+      | otherwise = collectDirectionalSeparate l (ms, k, v)
+    collectDirectional' _ (ms, k, Directional (These (Axial (This bs)) (Axial (These be ie)))) = (collectDirectional' l . (ms, k, )) =<< [eachSide (block' bs) (block' be), inlineEnd ie]
+    collectDirectional' LayoutLogical (ms, k, v@(Directional (These (Axial (That is)) (Axial (That ie)))))
+      -- We can only safely recurse into collectAxial if there's a shorthand available
+      | is == ie && l == LayoutLogical = collectAxial l (ms, k, block' is)
+      | otherwise = collectDirectionalSeparate l (ms, k, v)
+    -- There are no shorthands for three directions
+    collectDirectional' _ (ms, k, Directional (These (Axial (These bs is)) (Axial (That ie)))) = (collectDirectional' l . (ms, k, )) =<< [blockStart bs, eachSide (inline' is) (inline' ie)]
+    collectDirectional' _ (ms, k, v) = collectDirectionalSeparate l (ms, k, v)
+
+collectCornerDirectionalSeparate :: LayoutMode -> PartedKeyVal (CornerDirectional (Value, Value)) -> [Representation]
+collectCornerDirectionalSeparate l (ms, k, CornerDirectional v) = go =<< splitDir (fmap joinValue $ fromLogical l v)
   where
-    xprefix = (maybe "" (<> "-") xpfx <>)
-    ky n = case pfx of
-      [] -> Key $ Plain $ xprefix n
-      pfx' -> Key $ Prefixed $ (, xprefix n) <$> pfx'
-    suffix = (<> maybe "" ("-" <>) sfx)
-    shorthand = ky $ suffix k
-    logicalKeys = ky . suffix . ((k <> "-") <>) <$> ["block-start", "inline-start", "block-end", "inline-end"]
-    -- inline-start and inline-end are flipped in physical
-    physicalKeys = ky . suffix . ((k <> "-") <>) <$> ["top", "right", "bottom", "left"]
+    joinValue (ss, ss') | ss == ss' = ss
+                        | otherwise = noCommas [ss, "/", ss']
+    go (dir, v') = collect (ms, partedToKey (Just $ dirName dir) k, v')
+    dirName (DirStart AxisBlock) = "start-start"
+    dirName (DirStart AxisInline) = "end-start"
+    dirName (DirEnd AxisBlock) = "end-end"
+    dirName (DirEnd AxisInline) = "end-end"
+    splitAxes = mergeTheseWith (pure . (AxisBlock, )) (pure . (AxisInline, )) (<>) . unAxial
+    splitDir = mergeTheseWith (fmap (first DirStart) . splitAxes) (fmap (first DirEnd) . splitAxes) (<>) . unDirectional
+
+collectCornerDirectional :: LayoutMode -> PartedKeyVal (CornerDirectional (Value, Value)) -> [Representation]
+collectCornerDirectional l (ms, k, v) | l /= LayoutLogical && l /= (LayoutConvert False False False) = collectCornerDirectional (LayoutConvert False False False) (ms, k, fromLogical l v)
+collectCornerDirectional l (ms_, k_, v_) = collectCornerDirectional' (ms_, k_, fromLogical l v_)
+  where
+    collectCornerDirectional' (ms, k, CornerDirectional (Directional (These (Axial (These (ss, ss') (es, es'))) (Axial (These (ee, ee') (se, se'))))))
+      | all (== ss) [ss', es, es', ee, ee', se, se'] = collect (ms, partedToKey Nothing k, ss)
+      | all (== ss) [es, ee, se] && all (== ss') [es', ee', se'] = collect (ms, partedToKey Nothing k, noCommas [ss, "/", ss'])
+      -- There's no logical variant for the remaining shorthands and it would be a pain to write them all down so we'll just ignore them
+      | otherwise = (collectCornerDirectional' . (ms, k, )) =<< [startStart (ss, ss'), endStart (es, es'), endEnd (ee, ee'), startEnd (se, se')]
+    collectCornerDirectional' (ms, k, v) = collectCornerDirectionalSeparate l (ms, k, v)
 
 selector :: Config -> Selector -> Builder
 selector Config { lbrace = "", rbrace = "" } = rec

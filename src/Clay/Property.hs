@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving #-}
 module Clay.Property where
 
@@ -8,6 +9,7 @@ import Data.List.NonEmpty (NonEmpty, toList)
 import Data.Maybe
 import Data.String
 import Data.Text (Text, replace)
+import Data.These
 
 data Prefixed = Prefixed { unPrefixed :: [(Text, Text)] } | Plain { unPlain :: Text }
   deriving (Show, Eq)
@@ -48,14 +50,31 @@ newtype Key a = Key { unKeys :: Prefixed }
 cast :: Key a -> Key ()
 cast (Key k) = Key k
 
-data PartedKey a = PartedKey { partedPrefix :: [Text], extraPrefix :: Maybe Text, partedInfix :: Text, partedSuffix :: Maybe Text }
+data PartedKey a = PartedKey
+  { partedPrefix :: [Text] -- ^ The prefices of the property, such as -moz-
+  , partedParts :: These Text Text -- ^ 'This' is the thing before the direction/axis, such as 'min' or 'border', and 'That' is the thing after the direction/axis, such as 'size' or 'color'
+  }
   deriving (Show, Eq)
 
 instance IsString (PartedKey a) where
-  fromString s = PartedKey [] Nothing (fromString s) Nothing
+  fromString s = PartedKey [] $ This $ fromString s
 
 castParted :: PartedKey a -> PartedKey ()
-castParted (PartedKey pfx xpfx k sfx) = PartedKey pfx xpfx k sfx
+castParted (PartedKey pfx ps) = PartedKey pfx ps
+
+mkKey :: [Text] -> Text -> Key a
+mkKey [] k = Key $ Plain $ k
+mkKey pfxs' k = Key $ Prefixed $ (, k) <$> pfxs'
+
+partedToKey :: Maybe Text -> PartedKey a -> Key a
+partedToKey Nothing (PartedKey pfxs ps) = mkKey pfxs $ case ps of
+  This pfx -> pfx
+  That sfx -> sfx
+  These pfx sfx -> mconcat [pfx, "-", sfx]
+partedToKey (Just infx) (PartedKey pfxs ps) = mkKey pfxs $ case ps of
+  This pfx -> mconcat [pfx, "-", infx]
+  That sfx -> mconcat [infx, "-", sfx]
+  These pfx sfx -> mconcat [pfx, "-", infx, "-", sfx]
 
 -------------------------------------------------------------------------------
 

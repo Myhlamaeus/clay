@@ -51,7 +51,7 @@ borderRight   w s c = BM.border $ inlineEnd $ mkBorder w s c
 borderColor4 :: Style m => Color -> Color -> Color -> Color -> m ()
 borderColor4 bs ie be is = BM.borderColor $ eachDir bs is be ie
 
-borderColor, borderLeftColor, borderRightColor, borderTopColor, borderBottomColor :: Style m => Color -> m ()
+borderColor, borderTopColor, borderLeftColor, borderBottomColor, borderRightColor :: Style m => Color -> m ()
 
 borderColor       = BM.borderColor . all'
 borderTopColor    = BM.borderColor . blockStart
@@ -62,7 +62,7 @@ borderRightColor  = BM.borderColor . inlineEnd
 borderStyle4 :: Style m => Stroke -> Stroke -> Stroke -> Stroke -> m ()
 borderStyle4 bs ie be is = BM.borderStyle $ eachDir bs is be ie
 
-borderStyle, borderLeftStyle, borderRightStyle, borderTopStyle, borderBottomStyle :: Style m => Stroke -> m ()
+borderStyle, borderTopStyle, borderLeftStyle, borderBottomStyle, borderRightStyle :: Style m => Stroke -> m ()
 
 borderStyle       = BM.borderStyle . all'
 borderTopStyle    = BM.borderStyle . blockStart
@@ -73,13 +73,25 @@ borderRightStyle  = BM.borderStyle . inlineEnd
 borderWidth4 :: Style m => Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> m ()
 borderWidth4 bs ie be is = BM.borderWidth $ eachDir bs is be ie
 
-borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth :: Style m => Size LengthUnit -> m ()
+borderWidth, borderTopWidth, borderLeftWidth, borderBottomWidth, borderRightWidth :: Style m => Size LengthUnit -> m ()
 
 borderWidth       = BM.borderWidth . all'
 borderTopWidth    = BM.borderWidth . blockStart
 borderLeftWidth   = BM.borderWidth . inlineStart
 borderBottomWidth = BM.borderWidth . blockEnd
 borderRightWidth  = BM.borderWidth . inlineEnd
+
+borderRadius :: Style m => Size a -> Size a -> Size a -> Size a -> m ()
+borderRadius ss se ee es = BM.borderRadius $ eachCorner (ss, ss) (es, es) (ee, ee) (se, se)
+
+borderTopLeftRadius, borderBottomLeftRadius, borderBottomRightRadius,
+  borderTopRightRadius :: Style m => Size a -> Size a -> m ()
+
+borderTopLeftRadius     a b = BM.borderRadius $ startStart (a, b)
+borderBottomLeftRadius  a b = BM.borderRadius $ endStart (a, b)
+borderBottomRightRadius a b = BM.borderRadius $ endEnd (a, b)
+borderTopRightRadius    a b = BM.borderRadius $ startEnd (a, b)
+
 
 -------------------------------------------------------------------------------
 
@@ -94,7 +106,7 @@ outlineRight   s w c = BM.outline $ inlineEnd $ mkBorder w s c
 outlineColor4 :: Style m => Color -> Color -> Color -> Color -> m ()
 outlineColor4 bs ie be is = BM.outlineColor $ eachDir bs is be ie
 
-outlineColor, outlineLeftColor, outlineRightColor, outlineTopColor, outlineBottomColor :: Style m => Color -> m ()
+outlineColor, outlineTopColor, outlineLeftColor, outlineBottomColor, outlineRightColor :: Style m => Color -> m ()
 
 outlineColor       = BM.outlineColor . all'
 outlineTopColor    = BM.outlineColor . blockStart
@@ -105,7 +117,7 @@ outlineRightColor  = BM.outlineColor . inlineEnd
 outlineStyle4 :: Style m => Stroke -> Stroke -> Stroke -> Stroke -> m ()
 outlineStyle4 bs ie be is = BM.outlineStyle $ eachDir bs is be ie
 
-outlineStyle, outlineLeftStyle, outlineRightStyle, outlineTopStyle, outlineBottomStyle :: Style m => Stroke -> m ()
+outlineStyle, outlineTopStyle, outlineLeftStyle, outlineBottomStyle, outlineRightStyle :: Style m => Stroke -> m ()
 
 outlineStyle       = BM.outlineStyle . all'
 outlineTopStyle    = BM.outlineStyle . blockStart
@@ -116,7 +128,7 @@ outlineRightStyle  = BM.outlineStyle . inlineEnd
 outlineWidth4 :: Style m => Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> Size LengthUnit -> m ()
 outlineWidth4 bs ie be is = BM.outlineWidth $ eachDir bs is be ie
 
-outlineWidth, outlineLeftWidth, outlineRightWidth, outlineTopWidth, outlineBottomWidth :: Style m => Size LengthUnit -> m ()
+outlineWidth, outlineTopWidth, outlineLeftWidth, outlineBottomWidth, outlineRightWidth :: Style m => Size LengthUnit -> m ()
 
 outlineWidth       = BM.outlineWidth . all'
 outlineTopWidth    = BM.outlineWidth . blockStart
