@@ -8,7 +8,7 @@
 module Clay.Stylesheet where
 
 import Control.Applicative
-import Control.Monad (MonadPlus)
+import Control.Monad
 import Control.Monad.Cont (ContT)
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Fix (MonadFix)
