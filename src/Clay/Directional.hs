@@ -161,7 +161,7 @@ start' = Directional . This
 -- >>> renderLogical $ padding $ end' $ all' $ px 5
 -- padding-block-end: 5px;
 -- padding-inline-end: 5px;
-end' = Directional . This
+end' = Directional . That
 
 blockStart, blockEnd, inlineStart, inlineEnd :: a -> Directional a
 

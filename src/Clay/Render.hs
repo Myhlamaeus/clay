@@ -15,6 +15,7 @@ module Clay.Render
 , renderWith
 , renderSelector
 , withBanner
+, collectAxialSide
 )
 where
 
@@ -412,11 +413,13 @@ collectAxial l (ms_, k_, v_) = collectAxial' l (ms_, k_, fromLogical l v_)
   collectAxial' _ (ms, k@(PartedKey _ (This "border")),    v@(Axial (These b i))) | b == i     = collect (ms, partedToKey Nothing k, b)
                                                                                 | otherwise = collectAxialSide l (ms, k, v)
   -- Use the appropriate shorthand and prefix values of logical shorthands with "logical "
-  collectAxial' _ (ms, k, Axial (These b i)) | b == i     = collect (ms, partedToKey Nothing k, b)
-                                             | otherwise = collect (ms, partedToKey Nothing k,
-                                                                      case l of
-                                                                        LayoutLogical -> noCommas ["logical", b, i]
-                                                                        _ -> noCommas [b, i]
+  collectAxial' _ (ms, k@(PartedKey _ k'), Axial (These b i)) | b == i     = collect (ms, partedToKey Nothing k, b)
+                                             | otherwise = collect (ms, partedToKey Nothing k, noCommas $ case l of
+                                                                      LayoutLogical ->  case k' of
+                                                                        -- Logical inset is missing the "logical" keyword for whatever reason
+                                                                        This "inset" -> [b, i]
+                                                                        _ ->            ["logical", b, i]
+                                                                      _ -> [b, i]
                                                                    )
   collectAxial' _ (ms, k, v) = collectAxialSide l (ms, k, v)
 
@@ -428,22 +431,22 @@ collectDirectionalSeparate l (ms, k@(PartedKey _ k'), v) = go =<< splitDir (from
     go (DirStart AxisBlock, bs) = case l of
       LayoutLogical -> collect (ms, partedToKey (Just "block-start") k, bs)
       _ ->  case k' of
-        That "inset" -> collect (ms, "top", bs)
+        This "inset" -> collect (ms, "top", bs)
         _ -> collect (ms, partedToKey (Just "top") k, bs)
     go (DirStart AxisInline, is) = case l of
       LayoutLogical -> collect (ms, partedToKey (Just "inline-start") k, is)
       _ ->  case k' of
-        That "inset" -> collect (ms, "left", is)
+        This "inset" -> collect (ms, "left", is)
         _ -> collect (ms, partedToKey (Just "left") k, is)
     go (DirEnd AxisBlock, be) = case l of
       LayoutLogical -> collect (ms, partedToKey (Just "block-end") k, be)
       _ ->  case k' of
-        That "inset" -> collect (ms, "bottom", be)
+        This "inset" -> collect (ms, "bottom", be)
         _ -> collect (ms, partedToKey (Just "bottom") k, be)
     go (DirEnd AxisInline, ie) = case l of
       LayoutLogical -> collect (ms, partedToKey (Just "inline-end") k, ie)
       _ ->  case k' of
-        That "inset" -> collect (ms, "right", ie)
+        This "inset" -> collect (ms, "right", ie)
         _ -> collect (ms, partedToKey (Just "right") k, ie)
     splitAxes = mergeTheseWith (pure . (AxisBlock, )) (pure . (AxisInline, )) (<>) . unAxial
     splitDir = mergeTheseWith (fmap (first DirStart) . splitAxes) (fmap (first DirEnd) . splitAxes) (<>) . unDirectional
@@ -454,10 +457,11 @@ collectDirectional l (ms_, k_, v_) = collectDirectional' l (ms_, k_, fromLogical
   where
     -- There's no shorthand for top/right/bottom/left
     collectDirectional' (LayoutConvert _ _ _) (ms, k@(PartedKey _ (This "inset")), v) = collectDirectionalSeparate l (ms, k, v)
-    collectDirectional' _ (ms, k@(PartedKey _ k'), Directional (These (Axial (These bs is)) (Axial (These be ie))))
+    collectDirectional' _ (ms, k@(PartedKey _ k'), v@(Directional (These (Axial (These bs is)) (Axial (These be ie)))))
       -- If there is no shorthand available collectAxial splits up the axes and recurses into collectDirectional for each of them;
       -- this is safe, as it wouldn't match 'Axial (These s e)' on either side
       | bs == be && is == ie = collectAxial l (ms, k, eachAxis bs is)
+      | k' == This "border"     = collectDirectionalSeparate l (ms, k, v)
       | otherwise = collect (ms, partedToKey Nothing k, noCommas $ case l of
                                 LayoutLogical -> case k' of
                                   -- Logical inset is missing the "logical" keyword for whatever reason
@@ -473,7 +477,7 @@ collectDirectional l (ms_, k_, v_) = collectDirectional' l (ms_, k_, fromLogical
     collectDirectional' _ (ms, k, Directional (These (Axial (This bs)) (Axial (These be ie)))) = (collectDirectional' l . (ms, k, )) =<< [eachSide (block' bs) (block' be), inlineEnd ie]
     collectDirectional' LayoutLogical (ms, k, v@(Directional (These (Axial (That is)) (Axial (That ie)))))
       -- We can only safely recurse into collectAxial if there's a shorthand available
-      | is == ie && l == LayoutLogical = collectAxial l (ms, k, block' is)
+      | is == ie && l == LayoutLogical = collectAxial l (ms, k, inline' is)
       | otherwise = collectDirectionalSeparate l (ms, k, v)
     -- There are no shorthands for three directions
     collectDirectional' _ (ms, k, Directional (These (Axial (These bs is)) (Axial (That ie)))) = (collectDirectional' l . (ms, k, )) =<< [blockStart bs, eachSide (inline' is) (inline' ie)]

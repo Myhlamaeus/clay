@@ -75,7 +75,7 @@ minBoxSize = keyAxial (PartedKey [] (These "min" "size"))
 -- >>> renderLogical $ maxBoxSize $ all' $ px 5
 -- max-block-size: 5px;
 -- max-inline-size: 5px;
-maxBoxSize = keyAxial (PartedKey [] (These "min" "size"))
+maxBoxSize = keyAxial (PartedKey [] (These "max" "size"))
 
 -------------------------------------------------------------------------------
 

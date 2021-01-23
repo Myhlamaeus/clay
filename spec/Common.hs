@@ -66,8 +66,8 @@ testDirectionalDefault prop bs is be ie all'' eachAxis'' block'' inline'' eachDi
   describe' "block'" [bs] $ shouldRenderAsFrom (unpack block'') block'' $ prop $ block' bs
   describe' "inline'" [is] $ shouldRenderAsFrom (unpack inline'') inline'' $ prop $ inline' is
   describe' "eachDir" [bs, is, be, ie] $ shouldRenderAsFrom (unpack eachDir'') eachDir'' $ prop $ eachDir bs is be ie
-  describe' "start'" [bs] $ shouldRenderAsFrom (unpack start'') start'' $ prop $ start' bs
-  describe' "end'" [be] $ shouldRenderAsFrom (unpack end'') end'' $ prop $ end' be
+  describe' "start' . all'" [bs] $ shouldRenderAsFrom (unpack start'') start'' $ prop $ start' $ all' bs
+  describe' "end' . all'" [be] $ shouldRenderAsFrom (unpack end'') end'' $ prop $ end' $ all' be
   describe' "blockStart" [bs] $ shouldRenderAsFrom (unpack blockStart'') blockStart'' $ prop $ blockStart bs
   describe' "inlineStart" [is] $ shouldRenderAsFrom (unpack inlineStart'') inlineStart'' $ prop $ inlineStart is
   describe' "blockEnd" [be] $ shouldRenderAsFrom (unpack blockEnd'') blockEnd'' $ prop $ blockEnd be
@@ -80,8 +80,8 @@ testDirectionalLogical prop bs is be ie all'' eachAxis'' block'' inline'' eachDi
   describe' "block'" [bs] $ shouldRenderLogicalAsFrom (unpack block'') block'' $ prop $ block' bs
   describe' "inline'" [is] $ shouldRenderLogicalAsFrom (unpack inline'') inline'' $ prop $ inline' is
   describe' "eachDir" [bs, is, be, ie] $ shouldRenderLogicalAsFrom (unpack eachDir'') eachDir'' $ prop $ eachDir bs is be ie
-  describe' "start'" [bs] $ shouldRenderLogicalAsFrom (unpack start'') start'' $ prop $ start' bs
-  describe' "end'" [be] $ shouldRenderLogicalAsFrom (unpack end'') end'' $ prop $ end' be
+  describe' "start' . all'" [bs] $ shouldRenderLogicalAsFrom (unpack start'') start'' $ prop $ start' $ all' bs
+  describe' "end' . all'" [be] $ shouldRenderLogicalAsFrom (unpack end'') end'' $ prop $ end' $ all' be
   describe' "blockStart" [bs] $ shouldRenderLogicalAsFrom (unpack blockStart'') blockStart'' $ prop $ blockStart bs
   describe' "inlineStart" [is] $ shouldRenderLogicalAsFrom (unpack inlineStart'') inlineStart'' $ prop $ inlineStart is
   describe' "blockEnd" [be] $ shouldRenderLogicalAsFrom (unpack blockEnd'') blockEnd'' $ prop $ blockEnd be
