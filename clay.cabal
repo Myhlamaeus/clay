@@ -40,10 +40,12 @@ Library
 
   Exposed-Modules:
     Clay
+    Clay.V2
     Clay.Animation
     Clay.Attributes
     Clay.Background
     Clay.Border
+    Clay.Border.V2
     Clay.Box
     Clay.BoxModel
     Clay.Color

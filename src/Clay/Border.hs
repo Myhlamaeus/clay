@@ -32,14 +32,13 @@ module Clay.Border
 )
 where
 
-import           Clay.Directional
-import Clay.Property
-import Clay.Stylesheet
-import Clay.Color
-import Clay.Size
-import Clay.Display
+import Clay.Border.V2
+import Clay.BoxModel (Stroke, dashed, dotted, double, groove, inset, mkBorder, outset, ridge, solid, wavy)
 import qualified Clay.BoxModel as BM
-import Clay.BoxModel (Stroke, solid, dotted, dashed, double, wavy, groove, ridge, inset, outset, mkBorder)
+import Clay.Color
+import Clay.Directional
+import Clay.Size
+import Clay.Stylesheet
 
 border, borderTop, borderLeft, borderBottom, borderRight :: Style m => Size LengthUnit -> Stroke -> Color -> m ()
 
@@ -127,41 +126,3 @@ outlineRightWidth  = BM.outlineWidth . inlineEnd
 
 outlineOffset :: Style m => Size LengthUnit -> m ()
 outlineOffset = key "outline-offset"
-
--------------------------------------------------------------------------------
-
--- @TODO borderRadius is using a Directional rotated by 1/8; should we use the same structure?
-
-borderRadius :: Style m => Size a -> Size a -> Size a -> Size a -> m ()
-borderRadius a b c d = key "border-radius" (a ! b ! c ! d)
-
-borderTopLeftRadius, borderTopRightRadius,
-  borderBottomLeftRadius, borderBottomRightRadius :: Style m => Size a -> Size a -> m ()
-
-borderTopLeftRadius     a b = key "border-top-left-radius"     (a ! b)
-borderTopRightRadius    a b = key "border-top-right-radius"    (a ! b)
-borderBottomLeftRadius  a b = key "border-bottom-left-radius"  (a ! b)
-borderBottomRightRadius a b = key "border-bottom-right-radius" (a ! b)
-
--------------------------------------------------------------------------------
-
-{- newtype Collapse = Collapse Value
-  deriving (Val, GlobalValues, Other)
-
-collapseCollapse, collapseSeparate :: Collapse
-
-collapseCollapse = Collapse "collapse"
-collapseSeparate  = Collapse "separate" -}
-
-{-  Due conflict with Visibility collapse
-    Preferred just to add separate to Visibility
-    Because (borderCollapse collapseCollapse) sounds bad -}
-
-borderCollapse :: Style m => Visibility -> m ()
-borderCollapse = key "border-collapse"
-
-borderSpacing :: Style m => Size a -> m ()
-borderSpacing = key "border-spacing"
-
-borderSpacing2 :: Style m => Size a -> Size a -> m ()
-borderSpacing2 a b = key "border-spacing" (a ! b)
