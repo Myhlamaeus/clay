@@ -17,7 +17,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Identity (Identity(runIdentity))
 import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans (MonadTrans(lift))
-import Control.Monad.Writer (censor, WriterT(runWriterT),  execWriterT, tell)
+import Control.Monad.Writer (censor, WriterT(runWriterT),  execWriterT, writer, tell)
 import qualified Control.Monad.RWS.Lazy as RWSLazy
 import qualified Control.Monad.RWS.Strict as RWSStrict
 import qualified Control.Monad.State.Lazy as StateLazy
@@ -135,6 +135,16 @@ runStyleT (StyleT a) = runWriterT a
 
 execStyleT :: Monad m => StyleT m a -> m [Rule]
 execStyleT (StyleT a) = execWriterT a
+
+runStyleTToCss :: Monad m => StyleT m a -> m (a, Css)
+runStyleTToCss ma = do
+  (a, rs) <- runStyleT ma
+  pure (a, StyleT $ writer ((), rs))
+
+execStyleTToCss :: Monad m => StyleT m a -> m Css
+execStyleTToCss ma = do
+  rs <- execStyleT ma
+  pure $ StyleT $ writer ((), rs)
 
 runS :: StyleT Identity () -> [Rule]
 runS = runIdentity . execStyleT
