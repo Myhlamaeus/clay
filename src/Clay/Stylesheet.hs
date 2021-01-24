@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -17,7 +19,9 @@ import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Identity (Identity(runIdentity))
 import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans (MonadTrans(lift))
-import Control.Monad.Writer (censor, WriterT(runWriterT),  execWriterT, writer, tell)
+import Control.Monad.Writer (WriterT(runWriterT),  execWriterT)
+import Control.Monad.Reader.Class (MonadReader)
+import Control.Monad.Writer.Class
 import qualified Control.Monad.RWS.Lazy as RWSLazy
 import qualified Control.Monad.RWS.Strict as RWSStrict
 import qualified Control.Monad.State.Lazy as StateLazy
@@ -33,6 +37,7 @@ import Clay.Common
 import Clay.Directional
 
 import Data.Bifunctor (bimap)
+import Control.Monad.State.Class (MonadState)
 
 -------------------------------------------------------------------------------
 
@@ -101,7 +106,7 @@ data Rule
   deriving Show
 
 newtype StyleT m a = StyleT { unStyleT :: WriterT [Rule] m a }
-  deriving (Functor, Applicative, Monad, MonadTrans, MonadFix, MonadFail, MonadIO, Alternative, MonadPlus)
+  deriving (Functor, Applicative, Monad, MonadTrans, MonadFix, MonadFail, MonadIO, Alternative, MonadPlus, MonadReader r, MonadState s)
 
 class Monad m => Style m where
   rule :: Rule -> m ()
