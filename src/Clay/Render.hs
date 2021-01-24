@@ -12,6 +12,7 @@ module Clay.Render
 , renderLogical
 , htmlInline
 , putCss
+, renderTWith
 , renderWith
 , renderSelector
 , withBanner

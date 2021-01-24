@@ -3,6 +3,7 @@ module Clay.V2
 -- * Rendering stylesheets to CSS.
   render
 , renderWith
+, renderTWith
 , putCss
 
 , pretty
@@ -12,6 +13,8 @@ module Clay.V2
 
 -- * The @Css@ monad for collecting style rules.
 
+, Style(..)
+, StyleT
 , Css
 
 , (?)
