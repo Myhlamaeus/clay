@@ -488,12 +488,16 @@ collectCornerDirectionalSeparate :: LayoutMode -> PartedKeyVal (CornerDirectiona
 collectCornerDirectionalSeparate l (ms, k, CornerDirectional v) = go =<< splitDir (fmap joinValue $ fromLogical l v)
   where
     joinValue (ss, ss') | ss == ss' = ss
-                        | otherwise = noCommas [ss, "/", ss']
-    go (dir, v') = collect (ms, partedToKey (Just $ dirName dir) k, v')
-    dirName (DirStart AxisBlock) = "start-start"
-    dirName (DirStart AxisInline) = "end-start"
-    dirName (DirEnd AxisBlock) = "end-end"
-    dirName (DirEnd AxisInline) = "end-end"
+                        | otherwise = noCommas [ss, ss']
+    go (dir, v') = collect (ms, partedToKey (Just $ dirName l dir) k, v')
+    dirName LayoutLogical (DirStart AxisBlock) = "start-start"
+    dirName LayoutLogical (DirStart AxisInline) = "end-start"
+    dirName LayoutLogical (DirEnd AxisBlock) = "end-end"
+    dirName LayoutLogical (DirEnd AxisInline) = "start-end"
+    dirName (LayoutConvert _ _ _) (DirStart AxisBlock) = "top-left"
+    dirName (LayoutConvert _ _ _) (DirStart AxisInline) = "bottom-left"
+    dirName (LayoutConvert _ _ _) (DirEnd AxisBlock) = "bottom-right"
+    dirName (LayoutConvert _ _ _) (DirEnd AxisInline) = "top-right"
     splitAxes = mergeTheseWith (pure . (AxisBlock, )) (pure . (AxisInline, )) (<>) . unAxial
     splitDir = mergeTheseWith (fmap (first DirStart) . splitAxes) (fmap (first DirEnd) . splitAxes) (<>) . unDirectional
 

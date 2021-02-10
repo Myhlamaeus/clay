@@ -86,3 +86,21 @@ testDirectionalLogical prop bs is be ie all'' eachAxis'' block'' inline'' eachDi
   describe' "inlineStart" [is] $ shouldRenderLogicalAsFrom (unpack inlineStart'') inlineStart'' $ prop $ inlineStart is
   describe' "blockEnd" [be] $ shouldRenderLogicalAsFrom (unpack blockEnd'') blockEnd'' $ prop $ blockEnd be
   describe' "inlineEnd" [ie] $ shouldRenderLogicalAsFrom (unpack inlineEnd'') inlineEnd'' $ prop $ inlineEnd ie
+
+testCornerDirectionalDefault :: Val a => (CornerDirectional a -> Css) -> a -> a -> a -> a -> Text -> Text -> Text -> Text -> Text -> Text -> SpecWith ()
+testCornerDirectionalDefault prop ss es ee se allCorners'' eachCorner'' startStart'' endStart'' endEnd'' startEnd'' = describe "default" $ do
+  describe' "allCorners" [ss] $ shouldRenderAsFrom (unpack allCorners'') allCorners'' $ prop $ allCorners ss
+  describe' "eachCorner" [ss, es, ee, se] $ shouldRenderAsFrom (unpack eachCorner'') eachCorner'' $ prop $ eachCorner ss es ee se
+  describe' "startStart" [ss] $ shouldRenderAsFrom (unpack startStart'') startStart'' $ prop $ startStart ss
+  describe' "endStart" [es] $ shouldRenderAsFrom (unpack endStart'') endStart'' $ prop $ endStart es
+  describe' "endEnd" [ee] $ shouldRenderAsFrom (unpack endEnd'') endEnd'' $ prop $ endEnd ee
+  describe' "startEnd" [se] $ shouldRenderAsFrom (unpack startEnd'') startEnd'' $ prop $ startEnd se
+
+testCornerDirectionalLogical :: Val a => (CornerDirectional a -> Css) -> a -> a -> a -> a -> Text -> Text -> Text -> Text -> Text -> Text -> SpecWith ()
+testCornerDirectionalLogical prop ss es ee se allCorners'' eachCorner'' startStart'' endStart'' endEnd'' startEnd'' = describe "logical" $ do
+  describe' "allCorners" [ss] $ shouldRenderLogicalAsFrom (unpack allCorners'') allCorners'' $ prop $ allCorners ss
+  describe' "eachCorner" [ss, es, ee, se] $ shouldRenderLogicalAsFrom (unpack eachCorner'') eachCorner'' $ prop $ eachCorner ss es ee se
+  describe' "startStart" [ss] $ shouldRenderLogicalAsFrom (unpack startStart'') startStart'' $ prop $ startStart ss
+  describe' "endStart" [es] $ shouldRenderLogicalAsFrom (unpack endStart'') endStart'' $ prop $ endStart es
+  describe' "endEnd" [ee] $ shouldRenderLogicalAsFrom (unpack endEnd'') endEnd'' $ prop $ endEnd ee
+  describe' "startEnd" [se] $ shouldRenderLogicalAsFrom (unpack startEnd'') startEnd'' $ prop $ startEnd se

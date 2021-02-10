@@ -239,7 +239,7 @@ startStart = CornerDirectional . blockStart
 --
 -- >>> renderLogical $ borderRadius $ endStart $ px 5
 -- padding-end-start-radius: 5px;
-endStart = CornerDirectional . blockEnd
+endStart = CornerDirectional . inlineStart
 
 -- | Set the value for the end-end direction
 -- >>> render $ borderRadius $ endEnd $ px 5
@@ -247,7 +247,7 @@ endStart = CornerDirectional . blockEnd
 --
 -- >>> renderLogical $ borderRadius $ endEnd $ px 5
 -- padding-end-end-radius: 5px;
-endEnd = CornerDirectional . inlineEnd
+endEnd = CornerDirectional . blockEnd
 
 -- | Set the value for the start-end direction
 -- >>> render $ borderRadius $ startEnd $ px 5
@@ -255,7 +255,7 @@ endEnd = CornerDirectional . inlineEnd
 --
 -- >>> renderLogical $ borderRadius $ startEnd $ px 5
 -- padding-start-end-radius: 5px;
-startEnd = CornerDirectional . inlineStart
+startEnd = CornerDirectional . inlineEnd
 
 -------------------------------------------------------------------------------
 

@@ -3,9 +3,8 @@
 module Clay.BoxModelSpec where
 
 import Test.Hspec
-import Clay hiding (padding, margin, border)
+import Clay.V2
 import Common
-import Clay.BoxModel
 
 spec :: Spec
 spec = do
@@ -192,3 +191,32 @@ spec = do
       "{border-inline-start:2px dotted #008000}"
       "{border-block-end:3px dashed #0000ff}"
       "{border-inline-end:4px double #ffff00}"
+  describe "borderRadius" $ do
+    testCornerDirectionalDefault borderRadius (pct 10, pct 10) (pct 30, pct 30) (pct 50, pct 50) (pct 70, pct 70)
+      "{border-radius:10%}"
+      "{border-top-left-radius:10%;border-bottom-left-radius:30%;border-bottom-right-radius:50%;border-top-right-radius:70%}"
+      "{border-top-left-radius:10%}"
+      "{border-bottom-left-radius:30%}"
+      "{border-bottom-right-radius:50%}"
+      "{border-top-right-radius:70%}"
+    testCornerDirectionalLogical borderRadius (pct 10, pct 10) (pct 30, pct 30) (pct 50, pct 50) (pct 70, pct 70)
+      "{border-radius:10%}"
+      "{border-start-start-radius:10%;border-end-start-radius:30%;border-end-end-radius:50%;border-start-end-radius:70%}"
+      "{border-start-start-radius:10%}"
+      "{border-end-start-radius:30%}"
+      "{border-end-end-radius:50%}"
+      "{border-start-end-radius:70%}"
+    testCornerDirectionalDefault borderRadius (pct 10, pct 20) (pct 30, pct 40) (pct 50, pct 60) (pct 70, pct 80)
+      "{border-radius:10% / 20%}"
+      "{border-top-left-radius:10% 20%;border-bottom-left-radius:30% 40%;border-bottom-right-radius:50% 60%;border-top-right-radius:70% 80%}"
+      "{border-top-left-radius:10% 20%}"
+      "{border-bottom-left-radius:30% 40%}"
+      "{border-bottom-right-radius:50% 60%}"
+      "{border-top-right-radius:70% 80%}"
+    testCornerDirectionalLogical borderRadius (pct 10, pct 20) (pct 30, pct 40) (pct 50, pct 60) (pct 70, pct 80)
+      "{border-radius:10% / 20%}"
+      "{border-start-start-radius:10% 20%;border-end-start-radius:30% 40%;border-end-end-radius:50% 60%;border-start-end-radius:70% 80%}"
+      "{border-start-start-radius:10% 20%}"
+      "{border-end-start-radius:30% 40%}"
+      "{border-end-end-radius:50% 60%}"
+      "{border-start-end-radius:70% 80%}"
